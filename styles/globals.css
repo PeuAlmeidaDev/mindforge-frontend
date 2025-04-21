@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-secondary text-white;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+  }
+}
+
+@layer components {
+  .container {
+    @apply max-w-7xl mx-auto px-4;
+  }
+  
+  .btn-primary {
+    @apply px-6 py-3 bg-primary text-white rounded-md hover:bg-primary-dark transition-all transform hover:scale-105 text-center;
+  }
+  
+  .btn-secondary {
+    @apply px-6 py-3 border border-primary text-white rounded-md hover:bg-primary/20 transition-all text-center;
+  }
+} 
