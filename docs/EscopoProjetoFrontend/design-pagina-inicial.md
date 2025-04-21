@@ -205,8 +205,8 @@
   - Flor do Espírito Dourado: Dourado e branco com um background preto
   - Ordem das Três Faces: Roxo cibernético (#6C63FF) e um background cosmico
   - Alma das Águas Flamejantes: Vermelho e background verde escuro
-  - Chamas do Rugido: ermelho e background preto (Futuramente)
-  - Kazoku no Okami: background Azul profundo e azul celeste com detalhes brancos.
+  - Chamas do Rugido: Vermelho e background preto (Futuramente)
+  - Kazoku no Okami: background Azul profundo. azul celeste com detalhes brancos.
 - **Texto**: Branco (#FFFFFF) e verde claro (#C5E8D5) 
 
 

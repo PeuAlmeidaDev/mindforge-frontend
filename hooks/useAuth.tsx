@@ -128,6 +128,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
     
     try {
+      console.log('Enviando dados de registro:', JSON.stringify(userData, null, 2));
+      
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -137,9 +139,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       
       const data = await response.json();
+      console.log('Resposta do servidor:', data);
       
       if (!response.ok) {
-        throw new Error(data.message || 'Erro ao registrar');
+        // Verificar se os erros estão em um formato detalhado
+        if (data.details && typeof data.details === 'object') {
+          // Formatar mensagens de erro detalhadas
+          const errorMessages = Object.entries(data.details)
+            .map(([field, messages]) => {
+              if (Array.isArray(messages)) {
+                return `${field}: ${messages.join(', ')}`;
+              }
+              return `${field}: ${messages}`;
+            })
+            .join('; ');
+          throw new Error(errorMessages || data.message || 'Erro ao registrar');
+        } else {
+          throw new Error(data.message || 'Erro ao registrar');
+        }
       }
       
       localStorage.setItem('mindforge_token', data.data.token);

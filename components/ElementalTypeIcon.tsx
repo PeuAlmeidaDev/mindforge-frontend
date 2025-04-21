@@ -51,7 +51,27 @@ const typeMapping: Record<string, string> = {
   'steel': 'steel',
   'poison': 'poison',
   'flying': 'flying',
-  'rock': 'rock'
+  'rock': 'rock',
+  
+  // Suporte para tipos em maiúsculas (formato do backend)
+  'FIRE': 'fire',
+  'WATER': 'water',
+  'EARTH': 'earth',
+  'AIR': 'air',
+  'LIGHT': 'light',
+  'DARK': 'dark',
+  'NORMAL': 'normal',
+  'NATURE': 'nature',
+  'ELECTRIC': 'electric',
+  'ICE': 'ice',
+  'PSYCHIC': 'psychic',
+  'GHOST': 'ghost',
+  'STEEL': 'steel',
+  'POISON': 'poison',
+  'FLYING': 'flying',
+  'ROCK': 'rock',
+  'FAIRY': 'steel',
+  'DRAGON': 'flying'
 };
 
 const ElementalTypeIcon: React.FC<ElementalTypeIconProps> = ({ 
@@ -72,6 +92,7 @@ const ElementalTypeIcon: React.FC<ElementalTypeIconProps> = ({
     light: 'text-yellow-300',
     dark: 'text-purple-900',
     nature: 'text-green-500',
+    normal: 'text-gray-500',
     electric: 'text-yellow-400',
     ice: 'text-cyan-300',
     psychic: 'text-pink-400',
@@ -91,6 +112,7 @@ const ElementalTypeIcon: React.FC<ElementalTypeIconProps> = ({
     light: 'Luz - Clareza e inspiração, representa conhecimento e sabedoria',
     dark: 'Sombra - Mistério e introspecção, representa intuição profunda',
     nature: 'Natureza - Crescimento e harmonia, representa conexão e cura',
+    normal: 'Normal - Versatilidade e adaptação, representa o equilíbrio fundamental',
     electric: 'Elétrico - Velocidade e inovação, representa pensamento rápido',
     ice: 'Gelo - Preservação e calma, representa análise e estratégia',
     psychic: 'Psíquico - Poder mental e percepção, representa consciência expandida',
@@ -123,6 +145,8 @@ const ElementalTypeIcon: React.FC<ElementalTypeIconProps> = ({
         return <WiMoonAltNew size={size} className={combinedClass} />;
       case 'nature':
         return <GiTreeRoots size={size} className={combinedClass} />;
+      case 'normal':
+        return <FaGem size={size} className={combinedClass} />;
       case 'electric':
         return <FaBolt size={size} className={combinedClass} />;
       case 'ice':

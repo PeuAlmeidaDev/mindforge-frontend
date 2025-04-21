@@ -98,9 +98,8 @@ const Home: NextPage = () => {
                 src="/images/Index/BannerPrincipal.png"
                 alt="Banner Principal Mindforge"
                 fill
-                priority
+                priority={true}
                 quality={100}
-                unoptimized={true}
                 sizes="100vw"
                 style={{ objectFit: 'cover' }}
               />
@@ -166,7 +165,6 @@ const Home: NextPage = () => {
                   alt="Resumo do Projeto Mindforge"
                   fill
                   quality={100}
-                  unoptimized={true}
                   sizes="(max-width: 768px) 100vw, 50vw"
                   style={{ objectFit: 'cover' }}
                 />
@@ -202,7 +200,6 @@ const Home: NextPage = () => {
                       alt="Metas Diárias"
                       fill
                       quality={100}
-                      unoptimized={true}
                       sizes="(max-width: 768px) 80vw, 40vw"
                       style={{ objectFit: 'cover' }}
                     />
@@ -239,7 +236,6 @@ const Home: NextPage = () => {
                       alt="Interesses Personalizados"
                       fill
                       quality={100}
-                      unoptimized={true}
                       sizes="(max-width: 768px) 80vw, 40vw"
                       style={{ objectFit: 'cover' }}
                     />
@@ -278,7 +274,6 @@ const Home: NextPage = () => {
                       alt="Atributos em Evolução"
                       fill
                       quality={100}
-                      unoptimized={true}
                       sizes="(max-width: 768px) 80vw, 40vw"
                       style={{ objectFit: 'cover' }}
                     />
@@ -315,7 +310,6 @@ const Home: NextPage = () => {
                       alt="Progresso Constante"
                       fill
                       quality={100}
-                      unoptimized={true}
                       sizes="(max-width: 768px) 80vw, 40vw"
                       style={{ objectFit: 'cover' }}
                     />
@@ -361,7 +355,6 @@ const Home: NextPage = () => {
                   alt="Sistema de Batalha"
                   fill
                   quality={100}
-                  unoptimized={true}
                   sizes="(max-width: 768px) 100vw, 90vw"
                   style={{ objectFit: 'cover' }}
                 />
@@ -415,7 +408,6 @@ const Home: NextPage = () => {
                 alt="Recompensas e Progressão"
                 fill
                 quality={100}
-                unoptimized={true}
                 sizes="(max-width: 768px) 100vw, 90vw"
                 style={{ objectFit: 'cover' }}
               />
@@ -429,7 +421,6 @@ const Home: NextPage = () => {
                   alt="Evolução Contínua"
                   fill
                   quality={100}
-                  unoptimized={true}
                   sizes="(max-width: 768px) 90vw, 40vw"
                   style={{ 
                     objectFit: 'cover',
@@ -505,7 +496,6 @@ const Home: NextPage = () => {
                         alt={house.name}
                         fill
                         quality={100}
-                        unoptimized={true}
                         sizes="40px"
                         style={{ objectFit: 'cover' }}
                       />
@@ -524,7 +514,6 @@ const Home: NextPage = () => {
                       alt={houses[selectedHouse].name}
                       fill
                       quality={100}
-                      unoptimized={true}
                       sizes="(max-width: 768px) 100vw, 75vw"
                       style={{ objectFit: 'contain' }}
                     />

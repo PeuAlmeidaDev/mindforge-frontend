@@ -28,22 +28,45 @@ A casa do usuário é determinada automaticamente com base nos interesses seleci
 - **Chamas do Rugido**: Saúde & Fitness, Condicionamento Físico, Artes Marciais, Saúde & Bem-estar
 - **Flor do Espírito Dourado**: Criatividade & Expressão, Aprendizado & Desenvolvimento, Sustentabilidade & Lifestyle, Autoconhecimento & Mindset, Saúde & Bem-estar, Relações & Impacto Social
 
+## 🔖 Rota de Interesses
+- [x] Implementado no Frontend
+
+**Descrição:** Obtém a lista de todos os interesses disponíveis para seleção durante o cadastro ou edição de perfil.
+
+**Rota:** `GET /api/interests`
+
+**Resposta de Sucesso (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "name": "string",
+      "description": "string" 
+    }
+  ]
+}
+```
+
+**Possíveis Erros:**
+- 500: Erro interno no servidor
+
 **Tipos Elementais Válidos:**
-- fire
-- water
-- earth
-- air
-- light
-- dark
-- nature
-- electric
-- ice
-- psychic
-- ghost
-- steel
-- poison
-- flying
-- rock
+- FIRE
+- WATER
+- EARTH
+- AIR
+- LIGHT
+- DARK
+- NORMAL
+- POISON
+- ELECTRIC
+- ICE
+- PSYCHIC
+- GHOST
+- DRAGON
+- FAIRY
 
 **Resposta de Sucesso (201):**
 ```json

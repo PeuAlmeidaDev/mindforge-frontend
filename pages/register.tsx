@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Head from 'next/head';
 import useAuth from '../hooks/useAuth';
+import useInterests, { Interest } from '../hooks/useInterests';
 import ElementalTypeIcon from '../components/ElementalTypeIcon';
 import { motion } from 'framer-motion';
 
@@ -13,20 +14,24 @@ const elementalTypes = [
   'elétrico', 'gelo', 'psíquico', 'fantasma', 'aço', 'veneno', 'voador', 'pedra'
 ];
 
-// Definição dos interesses disponíveis
-const interestOptions = [
-  { id: '1', name: 'Saúde & Fitness' },
-  { id: '2', name: 'Condicionamento Físico' },
-  { id: '3', name: 'Artes Marciais' },
-  { id: '4', name: 'Organização & Produtividade' },
-  { id: '5', name: 'Estudos Acadêmicos' },
-  { id: '6', name: 'Criatividade & Expressão' },
-  { id: '7', name: 'Sustentabilidade & Lifestyle' },
-  { id: '8', name: 'Aprendizado & Desenvolvimento' },
-  { id: '9', name: 'Relações & Impacto Social' },
-  { id: '10', name: 'Autoconhecimento & Mindset' },
-  { id: '11', name: 'Saúde & Bem-estar' }
-];
+// Mapeamento de tipos elementais de português para inglês
+const elementalTypeMapping: Record<string, string> = {
+  'fogo': 'FIRE',
+  'água': 'WATER',
+  'terra': 'EARTH',
+  'ar': 'AIR',
+  'luz': 'LIGHT',
+  'sombra': 'DARK',
+  'natureza': 'NORMAL',
+  'elétrico': 'ELECTRIC',
+  'gelo': 'ICE',
+  'psíquico': 'PSYCHIC',
+  'fantasma': 'GHOST',
+  'aço': 'FAIRY',
+  'veneno': 'POISON',
+  'voador': 'DRAGON',
+  'pedra': 'NORMAL'
+};
 
 // Animações
 const containerVariants = {
@@ -62,6 +67,7 @@ const itemVariants = {
 export default function Register() {
   const router = useRouter();
   const { register, isLoading: authLoading, error: authError } = useAuth();
+  const { interests, isLoading: interestsLoading, error: interestsError } = useInterests();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -223,7 +229,7 @@ export default function Register() {
         username: formData.username,
         email: formData.email,
         password: formData.password,
-        primaryElementalType: formData.primaryElementalType,
+        primaryElementalType: elementalTypeMapping[formData.primaryElementalType] || formData.primaryElementalType,
         interests: formData.interests
       };
       
@@ -265,6 +271,7 @@ export default function Register() {
                 onChange={handleChange}
                 className={`w-full px-3 py-2 rounded bg-black/60 border ${errors.username ? 'border-red-500' : 'border-green-700'} text-white focus:outline-none focus:ring-2 focus:ring-green-500`}
                 autoFocus
+                autoComplete="username"
               />
               {errors.username && <p className="text-red-400 text-xs mt-1">{errors.username}</p>}
             </motion.div>
@@ -278,6 +285,7 @@ export default function Register() {
                 value={formData.email}
                 onChange={handleChange}
                 className={`w-full px-3 py-2 rounded bg-black/60 border ${errors.email ? 'border-red-500' : 'border-green-700'} text-white focus:outline-none focus:ring-2 focus:ring-green-500`}
+                autoComplete="email"
               />
               {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
             </motion.div>
@@ -307,6 +315,7 @@ export default function Register() {
                 onChange={handleChange}
                 className={`w-full px-3 py-2 rounded bg-black/60 border ${errors.password ? 'border-red-500' : 'border-green-700'} text-white focus:outline-none focus:ring-2 focus:ring-green-500`}
                 autoFocus
+                autoComplete="new-password"
               />
               {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
             </motion.div>
@@ -320,6 +329,7 @@ export default function Register() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 className={`w-full px-3 py-2 rounded bg-black/60 border ${errors.confirmPassword ? 'border-red-500' : 'border-green-700'} text-white focus:outline-none focus:ring-2 focus:ring-green-500`}
+                autoComplete="new-password"
               />
               {errors.confirmPassword && <p className="text-red-400 text-xs mt-1">{errors.confirmPassword}</p>}
             </motion.div>
@@ -366,39 +376,63 @@ export default function Register() {
             </motion.div>
             
             <motion.div variants={itemVariants} className="mt-6">
-              <label className="block text-green-300 mb-2">Interesses</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-black/30 rounded border border-green-900">
-                {interestOptions.map(interest => {
-                  const isSelected = formData.interests.includes(interest.id);
+              <label className="block text-green-300 mb-2 text-base font-medium">Interesses</label>
+              {interestsLoading ? (
+                <div className="flex justify-center items-center p-6 bg-black/20 rounded-lg">
+                  <div className="animate-spin w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full"></div>
+                  <span className="ml-3 text-green-300">Carregando interesses...</span>
+                </div>
+              ) : interestsError ? (
+                <div className="bg-red-900/30 p-4 rounded-lg border border-red-800/50 text-red-200 text-sm mb-3">
+                  <p>{interestsError}</p>
+                  <p className="mt-1">Tente recarregar a página.</p>
+                </div>
+              ) : (
+                <div className="bg-black/30 rounded-lg border border-green-900/50 overflow-hidden">
+                  <div className="p-4 bg-green-900/20 border-b border-green-900/30">
+                    <p className="text-sm text-green-200">Selecione os temas que mais combinam com seus objetivos de desenvolvimento pessoal</p>
+                  </div>
                   
-                  return (
-                    <motion.button
-                      key={interest.id}
-                      type="button"
-                      onClick={() => handleInterestToggle(interest.id)}
-                      className={`
-                        flex justify-between items-center p-2 rounded text-left transition-all duration-200
-                        ${isSelected 
-                          ? 'bg-green-900/60 border border-green-500 text-white' 
-                          : 'bg-black/40 hover:bg-black/60 border border-transparent hover:border-green-800/50 text-gray-300'}
-                      `}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <span className="text-sm">{interest.name}</span>
-                      <span className={`
-                        flex items-center justify-center w-5 h-5 rounded-full text-xs
-                        ${isSelected 
-                          ? 'bg-green-600 text-white' 
-                          : 'bg-black/60 border border-green-800 text-green-400'}
-                      `}>
-                        {isSelected ? '✓' : '+'}
-                      </span>
-                    </motion.button>
-                  );
-                })}
-              </div>
-              {errors.interests && <p className="text-red-400 text-xs mt-1">{errors.interests}</p>}
+                  {interests.length === 0 ? (
+                    <div className="p-6 text-center text-gray-400">
+                      Nenhum interesse disponível
+                    </div>
+                  ) : (
+                    <div className="p-4 flex flex-wrap gap-2.5 max-h-56 overflow-y-auto">
+                      {interests.map((interest: Interest) => {
+                        const isSelected = formData.interests.includes(interest.id);
+                        
+                        return (
+                          <motion.button
+                            key={interest.id}
+                            type="button"
+                            onClick={() => handleInterestToggle(interest.id)}
+                            className={`
+                              rounded-full px-4 py-2 text-sm font-medium transition-all duration-200
+                              ${isSelected 
+                                ? 'bg-green-700 text-white shadow-md ring-1 ring-green-500' 
+                                : 'bg-black/40 text-gray-300 hover:bg-black/60 hover:text-gray-200'}
+                            `}
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                          >
+                            {isSelected && (
+                              <span className="inline-block mr-1.5 text-green-300">✓</span>
+                            )}
+                            {interest.name}
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  
+                  {errors.interests && (
+                    <div className="px-4 py-2 bg-red-900/20 border-t border-red-800/30">
+                      <p className="text-red-400 text-xs">{errors.interests}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </motion.div>
           </motion.div>
         );
@@ -428,6 +462,7 @@ export default function Register() {
               width={150} 
               height={150}
               className="rounded-lg"
+              priority={true}
             />
           </motion.div>
           

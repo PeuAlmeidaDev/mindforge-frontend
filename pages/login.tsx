@@ -130,6 +130,16 @@ export default function Login() {
                 }
               }}
             >
+              {/* Campo de usuário oculto para acessibilidade */}
+              <input 
+                type="text" 
+                name="username" 
+                id="username"
+                autoComplete="username"
+                aria-hidden="true"
+                style={{ display: 'none' }}
+              />
+              
               <motion.div 
                 variants={{
                   hidden: { y: 20, opacity: 0 },
@@ -144,6 +154,7 @@ export default function Login() {
                   value={formData.email}
                   onChange={handleChange}
                   className={`w-full px-3 py-2 rounded bg-black/60 border ${errors.email ? 'border-red-500' : 'border-green-700'} text-white focus:outline-none focus:ring-2 focus:ring-green-500`}
+                  autoComplete="email"
                 />
                 {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
               </motion.div>
@@ -162,6 +173,7 @@ export default function Login() {
                   value={formData.password}
                   onChange={handleChange}
                   className={`w-full px-3 py-2 rounded bg-black/60 border ${errors.password ? 'border-red-500' : 'border-green-700'} text-white focus:outline-none focus:ring-2 focus:ring-green-500`}
+                  autoComplete="current-password"
                 />
                 {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
               </motion.div>
