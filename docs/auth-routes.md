@@ -1,9 +1,11 @@
 # 🔐 Rotas de Autenticação - Mindforge API
-
 Este documento descreve as rotas de autenticação disponíveis na API do Mindforge.
 
+Rota Frontend: http://localhost:3001
+Rota Backend: Servidor rodando na porta 3000
+
 ## 📝 Rota de Registro
-- [ ] Implementado no Frontend
+- [X] Implementado no Frontend
 
 **Descrição:** Cria uma nova conta de usuário no Mindforge.
 
