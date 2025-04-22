@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import { useHouseTheme } from '../hooks/useHouseTheme';
+import useHouseTheme from '../hooks/useHouseTheme';
 import useAuth from '../hooks/useAuth';
 
 const HouseThemeExample: React.FC = () => {

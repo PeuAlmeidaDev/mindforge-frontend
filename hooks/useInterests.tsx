@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_ENDPOINTS } from '../lib/config';
 
 export interface Interest {
   id: string;
@@ -16,7 +17,7 @@ export function useInterests() {
     setError(null);
     
     try {
-      const response = await fetch('/api/interests');
+      const response = await fetch(API_ENDPOINTS.INTERESTS.LIST);
       
       if (!response.ok) {
         throw new Error('Falha ao carregar interesses. Tente novamente mais tarde.');

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import useHouseTheme from '../../hooks/useHouseTheme';
 
@@ -10,113 +11,95 @@ interface UserStatsProps {
     specialDefense: number;
     speed: number;
   };
-  theme?: any; // Adicionando theme como opcional
-  elegantMode?: boolean; // Modo elegante para estilo mais sóbrio
+  theme?: any;
+  elegantMode?: boolean;
+  attributePointsToDistribute?: number;
+  variant?: 'default' | 'minimal' | 'alternative';
 }
 
-const UserStats = ({ stats, theme: propTheme, elegantMode = false }: UserStatsProps) => {
+const UserStats = ({ 
+  stats, 
+  theme: propTheme, 
+  elegantMode = false, 
+  attributePointsToDistribute = 0,
+  variant = 'default'
+}: UserStatsProps) => {
   const { theme: hookTheme } = useHouseTheme();
   // Usar o tema fornecido nas props ou o do hook
   const theme = propTheme || hookTheme;
   
-  // Calcular o valor máximo para escala
-  const maxStat = Math.max(
-    stats.health / 10, // Dividir health por 10 para escalar apropriadamente 
-    stats.physicalAttack,
-    stats.specialAttack,
-    stats.physicalDefense,
-    stats.specialDefense,
-    stats.speed
-  );
-  
-  // Calcular a média dos stats para mostrar no total
-  const totalValue = Math.floor(
-    (stats.health / 10 + 
+  // Calcular o poder de batalha como a soma de todos os atributos
+  const totalValue = 
+    stats.health + 
     stats.physicalAttack + 
     stats.specialAttack + 
     stats.physicalDefense + 
     stats.specialDefense + 
-    stats.speed) / 6
-  );
-  
-  // Função para renderizar pontos de força
-  const renderStrengthIndicator = (value: number) => {
-    // Escala de 1 a 5 pontos
-    const normalizedValue = Math.ceil((value / maxStat) * 5);
-    
-    return (
-      <div className="flex items-center space-x-0.5">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <div 
-            key={index}
-            className={`w-1.5 h-4 ${index < normalizedValue ? 'bg-white' : 'bg-white/20'} rounded-sm`}
-          />
-        ))}
-      </div>
-    );
-  };
+    stats.speed;
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Visão geral dos atributos */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-sm text-gray-400">Poder de Batalha</div>
-          <div className="text-3xl font-bold text-white">
-            {totalValue * 10}
+          <div className="text-sm" style={{ color: `${theme.colors.text}90` }}>
+            Poder de Batalha
+          </div>
+          <div className="text-3xl font-bold" style={{ color: theme.colors.primary }}>
+            {totalValue}
           </div>
         </div>
         
         <div className="flex space-x-2">
-          <div className="text-center px-3 py-2 rounded-md bg-black/20 backdrop-blur-sm border border-white/10">
-            <div className="text-xs text-gray-400">Nível</div>
-            <div className="font-semibold">{Math.floor(totalValue / 5)}</div>
-          </div>
+          {attributePointsToDistribute > 0 && (
+            <div 
+              className="text-center px-3 py-2 rounded-md backdrop-blur-sm" 
+              style={{ 
+                backgroundColor: `${theme.colors.backgroundDark}80`,
+                border: `1px solid ${theme.colors.primary}30`
+              }}
+            >
+              <div className="text-xs" style={{ color: `${theme.colors.text}80` }}>Pontos</div>
+              <div className="font-semibold" style={{ color: theme.colors.text }}>{attributePointsToDistribute}</div>
+            </div>
+          )}
           
-          <div className="text-center px-3 py-2 rounded-md bg-black/20 backdrop-blur-sm border border-white/10">
-            <div className="text-xs text-gray-400">Rank</div>
-            <div className="font-semibold">
-              {totalValue < 10 ? 'D' : totalValue < 15 ? 'C' : totalValue < 20 ? 'B' : totalValue < 25 ? 'A' : 'S'}
+          <div 
+            className="text-center px-3 py-2 rounded-md backdrop-blur-sm" 
+            style={{ 
+              backgroundColor: `${theme.colors.backgroundDark}80`,
+              border: `1px solid ${theme.colors.primary}30`
+            }}
+          >
+            <div className="text-xs" style={{ color: `${theme.colors.text}80` }}>
+              Rank
+            </div>
+            <div className="font-semibold" style={{ color: theme.colors.text }}>
+              {totalValue < 100 ? 'D' : totalValue < 150 ? 'C' : totalValue < 200 ? 'B' : totalValue < 250 ? 'A' : 'S'}
             </div>
           </div>
         </div>
       </div>
       
-      {/* Lista de atributos com representação minimalista */}
-      <div className="space-y-3 mt-2">
-        {Object.entries(stats).map(([key, value], index) => {
-          const statKey = key as keyof typeof stats;
-          
-          return (
-            <motion.div 
-              key={key} 
-              className="flex justify-between items-center"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.05 * index }}
+      {/* Lista de atributos - simplificada */}
+      <div className="grid grid-cols-2 gap-4">
+        {Object.entries(stats).map(([key, value]) => (
+          <div key={key} className="flex justify-between items-center border-b border-gray-800 pb-2">
+            <span 
+              className="text-sm font-medium"
+              style={{ color: theme.colors.text }}
             >
-              <span className="text-sm text-white">{formatStatName(statKey)}</span>
-              
-              <div className="flex items-center">
-                <span className="text-sm font-medium text-white mr-3">{value}</span>
-                {renderStrengthIndicator(statKey === 'health' ? value / 10 : value)}
-              </div>
-            </motion.div>
-          );
-        })}
+              {formatStatName(key)}
+            </span>
+            <span 
+              className="text-sm font-semibold"
+              style={{ color: theme.colors.primary }}
+            >
+              {value}
+            </span>
+          </div>
+        ))}
       </div>
-      
-      {/* Atributo mais forte - minimalista */}
-      <motion.div 
-        className="border-t border-white/10 pt-3 mt-3"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.4 }}
-      >
-        <div className="text-xs text-center text-gray-400">
-          Atributo mais forte: <span className="text-white font-medium">{getStrongestStat(stats)}</span>
-        </div>
-      </motion.div>
     </div>
   );
 };
@@ -137,11 +120,13 @@ function formatStatName(stat: string): string {
 
 function getStrongestStat(stats: UserStatsProps['stats']): string {
   const entries = Object.entries(stats);
-  const withoutHealth = entries.filter(([key]) => key !== 'health');
-  const strongest = withoutHealth.reduce((max, [key, value]) => 
-    value > max[1] ? [key, value] : max, ['', 0]);
+  const [strongestStat] = entries.reduce((strongest, current) => {
+    const [, strongestValue] = strongest;
+    const [, currentValue] = current;
+    return currentValue > strongestValue ? current : strongest;
+  });
   
-  return formatStatName(strongest[0]);
+  return formatStatName(strongestStat);
 }
 
 export default UserStats; 

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/router';
+import { API_ENDPOINTS } from '../lib/config';
 
 interface User {
   id: string;
@@ -83,7 +84,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (token) {
         try {
           // Buscar o perfil do usuário
-          const response = await fetch('http://localhost:3000/api/auth/profile', {
+          const response = await fetch(API_ENDPOINTS.AUTH.PROFILE, {
             headers: {
               Authorization: `Bearer ${token}`
             }
@@ -118,7 +119,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:3000/api/auth/login', {
+      const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -149,7 +150,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:3000/api/auth/register', {
+      const response = await fetch(API_ENDPOINTS.AUTH.REGISTER, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

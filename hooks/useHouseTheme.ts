@@ -43,7 +43,12 @@ export function useHouseTheme() {
     }
   }, [user]);
 
-  return { theme };
+  // Função para alterar manualmente o tema ativo quando necessário
+  const setActiveTheme = (houseName: string) => {
+    setTheme(getThemeByHouseName(houseName));
+  };
+
+  return { theme, setActiveTheme };
 }
 
 export default useHouseTheme; 

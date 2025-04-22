@@ -7,31 +7,13 @@ import useAuth from '../hooks/useAuth';
 import useInterests, { Interest } from '../hooks/useInterests';
 import ElementalTypeIcon from '../components/ElementalTypeIcon';
 import { motion } from 'framer-motion';
+import { ELEMENTAL_TYPE_MAPPING, API_ENDPOINTS } from '../lib/config';
 
 // Definição dos tipos elementais válidos
 const elementalTypes = [
   'fogo', 'água', 'terra', 'ar', 'luz', 'sombra', 'natureza',
   'elétrico', 'gelo', 'psíquico', 'fantasma', 'aço', 'veneno', 'voador', 'pedra'
 ];
-
-// Mapeamento de tipos elementais de português para inglês
-const elementalTypeMapping: Record<string, string> = {
-  'fogo': 'FIRE',
-  'água': 'WATER',
-  'terra': 'EARTH',
-  'ar': 'AIR',
-  'luz': 'LIGHT',
-  'sombra': 'DARK',
-  'natureza': 'NORMAL',
-  'elétrico': 'ELECTRIC',
-  'gelo': 'ICE',
-  'psíquico': 'PSYCHIC',
-  'fantasma': 'GHOST',
-  'aço': 'FAIRY',
-  'veneno': 'POISON',
-  'voador': 'DRAGON',
-  'pedra': 'NORMAL'
-};
 
 // Animações
 const containerVariants = {
@@ -229,7 +211,7 @@ export default function Register() {
         username: formData.username,
         email: formData.email,
         password: formData.password,
-        primaryElementalType: elementalTypeMapping[formData.primaryElementalType] || formData.primaryElementalType,
+        primaryElementalType: ELEMENTAL_TYPE_MAPPING[formData.primaryElementalType] || formData.primaryElementalType,
         interests: formData.interests
       };
       
