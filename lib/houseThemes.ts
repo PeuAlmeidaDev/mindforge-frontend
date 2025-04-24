@@ -107,8 +107,8 @@ export const houseThemes: Record<string, HouseTheme> = {
     colors: {
       primary: '#40A9FF', // Azul celeste
       secondary: '#FFFFFF', // Branco
-      background: '#003A6C', // Azul profundo
-      backgroundDark: '#00264A', // Azul profundo mais escuro
+      background: '#0A1A2F', // Azul noite mais escuro
+      backgroundDark: '#050E1A', // Azul noite muito escuro
       text: '#FFFFFF', // Branco
       accent: '#69C0FF', // Azul celeste claro
       tertiary: '#BAEAFF', // Azul muito claro
@@ -173,8 +173,8 @@ export const vibrantHouseThemes: Record<string, HouseTheme> = {
     colors: {
       primary: '#40A9FF', // Azul celeste
       secondary: '#FFFFFF', // Branco
-      background: '#003A6C', // Azul profundo
-      backgroundDark: '#00264A', // Azul profundo mais escuro
+      background: '#0A1A2F', // Azul noite mais escuro
+      backgroundDark: '#050E1A', // Azul noite muito escuro
       text: '#FFFFFF', // Branco
       accent: '#69C0FF', // Azul celeste claro
       tertiary: '#BAEAFF', // Azul muito claro

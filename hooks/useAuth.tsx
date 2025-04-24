@@ -46,6 +46,7 @@ interface AuthContextType {
   register: (userData: RegisterUserData) => Promise<void>;
   logout: () => void;
   error: string | null;
+  isNewUser: boolean;
 }
 
 // Interface para dados de registro
@@ -65,6 +66,7 @@ const AuthContext = createContext<AuthContextType>({
   register: async () => {},
   logout: () => {},
   error: null,
+  isNewUser: false,
 });
 
 interface AuthProviderProps {
@@ -75,6 +77,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isNewUser, setIsNewUser] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -117,6 +120,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
+    setIsNewUser(false);
     
     try {
       const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
@@ -161,9 +165,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const data = await response.json();
       
       if (response.ok && data.success) {
-        // Se o registro for bem-sucedido, pode fazer login automático ou redirecionar
+        // Se o registro for bem-sucedido, marcar como novo usuário
         localStorage.setItem('token', data.data.token);
         setUser(data.data.user);
+        setIsNewUser(true);
         router.push('/dashboard');
       } else {
         throw new Error(data.message || 'Falha no registro. Tente novamente.');
@@ -180,6 +185,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
+    setIsNewUser(false);
     router.push('/login');
   };
 
@@ -192,7 +198,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         login,
         register,
         logout,
-        error
+        error,
+        isNewUser
       }}
     >
       {children}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MenuButton from './MenuButton';
 import DashboardHeader from './DashboardHeader';
 import { useRouter } from 'next/router';
@@ -22,6 +22,20 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
   const [activeTab, setActiveTab] = useState('dashboard');
   const router = useRouter();
   const { logout } = useAuth();
+  
+  // Atualizar a aba ativa com base na rota atual
+  useEffect(() => {
+    const path = router.pathname;
+    if (path.includes('/dashboard')) {
+      setActiveTab('dashboard');
+    } else if (path.includes('/battle')) {
+      setActiveTab('battle');
+    } else if (path.includes('/house')) {
+      setActiveTab('house');
+    } else if (path.includes('/ranking')) {
+      setActiveTab('ranking');
+    }
+  }, [router.pathname]);
   
   const hexToRgb = (hex: string) => {
     // Remover o # do início se existir

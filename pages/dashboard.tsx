@@ -3,7 +3,9 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import useAuth from '../hooks/useAuth';
 import useHouseTheme from '../hooks/useHouseTheme';
+import useHouseReveal from '../hooks/useHouseReveal';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
+import HouseRevealAnimation from '../components/HouseRevealAnimation';
 import { API_ENDPOINTS } from '../lib/config';
 
 // Componentes extraídos
@@ -35,9 +37,11 @@ export default function Dashboard() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const { theme } = useHouseTheme();
+  const { showReveal, completeReveal, isLoading: revealLoading } = useHouseReveal();
   const [goals, setGoals] = useState<any[]>([]);
   const [activities] = useState<Activity[]>(MOCK_ACTIVITIES);
   const [loadingGoals, setLoadingGoals] = useState(true);
+  const [dashboardVisible, setDashboardVisible] = useState(!showReveal);
   
   // Outras informações baseadas no usuário
   const houseId = user?.house?.id || '';
@@ -54,7 +58,10 @@ export default function Dashboard() {
     if (isAuthenticated && user) {
       fetchUserGoals();
     }
-  }, [isAuthenticated, isLoading, router, user]);
+    
+    // Atualizar visibilidade do dashboard quando o estado de showReveal mudar
+    setDashboardVisible(!showReveal);
+  }, [isAuthenticated, isLoading, router, user, showReveal]);
 
   // Função para buscar metas do usuário da API
   const fetchUserGoals = async () => {
@@ -120,9 +127,15 @@ export default function Dashboard() {
       console.error('Erro ao completar meta:', error);
     }
   };
+  
+  // Função para lidar com a conclusão da animação
+  const handleRevealComplete = () => {
+    completeReveal();
+    setDashboardVisible(true);
+  };
 
   // Exibir tela de carregamento enquanto verifica autenticação
-  if (isLoading) {
+  if (isLoading || revealLoading) {
     return <LoadingScreen theme={theme} />;
   }
 
@@ -136,54 +149,62 @@ export default function Dashboard() {
         <meta name="description" content="Gerencie sua jornada no Mindforge" />
       </Head>
 
-      <DashboardLayout theme={theme}>
-        {/* Header e Banner + Barra de Menu */}
-        <HeaderSection 
-          theme={theme} 
-          user={user} 
-          houseName={houseName} 
-          hasHouse={hasHouse} 
-          houseId={houseId}
-        />
-        
-        {/* Conteúdo principal */}
-        <main className="px-4 py-6 max-w-5xl mx-auto relative z-10">
-          {/* Status da Casa */}
-          {hasHouse && (
-            <HouseStatusCard 
-              theme={theme} 
-              houseName={houseName} 
-              router={router} 
-              houseId={houseId}
-            />
-          )}
+      {/* Animação de revelação da casa */}
+      {showReveal && (
+        <HouseRevealAnimation onComplete={handleRevealComplete} />
+      )}
+
+      {/* Dashboard principal */}
+      {dashboardVisible && (
+        <DashboardLayout theme={theme}>
+          {/* Header e Banner + Barra de Menu */}
+          <HeaderSection 
+            theme={theme} 
+            user={user} 
+            houseName={houseName} 
+            hasHouse={hasHouse} 
+            houseId={houseId}
+          />
           
-          {/* Grade principal de conteúdo */}
-          <div className="space-y-6">
-            {/* Metas Diárias */}
-            <DailyGoalsCard 
-              theme={theme} 
-              goals={goals} 
-              loadingGoals={loadingGoals} 
-              onGoalComplete={handleGoalComplete} 
-            />
+          {/* Conteúdo principal */}
+          <main className="px-4 py-6 max-w-5xl mx-auto relative z-10">
+            {/* Status da Casa */}
+            {hasHouse && (
+              <HouseStatusCard 
+                theme={theme} 
+                houseName={houseName} 
+                router={router} 
+                houseId={houseId}
+              />
+            )}
             
-            {/* Estatísticas do Usuário */}
-            <UserStatsCard 
-              theme={theme} 
-              user={user} 
-              hasHouse={hasHouse} 
-            />
-            
-            {/* Feed de Atividades */}
-            <ActivityFeedCard 
-              theme={theme} 
-              activities={activities} 
-              hasHouse={hasHouse} 
-            />
-          </div>
-        </main>
-      </DashboardLayout>
+            {/* Grade principal de conteúdo */}
+            <div className="space-y-6">
+              {/* Metas Diárias */}
+              <DailyGoalsCard 
+                theme={theme} 
+                goals={goals} 
+                loadingGoals={loadingGoals} 
+                onGoalComplete={handleGoalComplete} 
+              />
+              
+              {/* Estatísticas do Usuário */}
+              <UserStatsCard 
+                theme={theme} 
+                user={user} 
+                hasHouse={hasHouse} 
+              />
+              
+              {/* Feed de Atividades */}
+              <ActivityFeedCard 
+                theme={theme} 
+                activities={activities} 
+                hasHouse={hasHouse} 
+              />
+            </div>
+          </main>
+        </DashboardLayout>
+      )}
     </>
   );
 } 
