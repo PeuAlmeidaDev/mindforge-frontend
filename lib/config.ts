@@ -17,6 +17,7 @@ export const API_ENDPOINTS = {
   GOALS: {
     DAILY: `${API_URL}/goals/daily`,
     COMPLETE: (goalId: string | number) => `${API_URL}/goals/complete/${goalId}`,
+    GENERATE: `${API_URL}/goals/generate`,
   },
   HOUSES: {
     INFO: (houseId: string) => `${API_URL}/houses/${houseId}`,

@@ -1,62 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/router';
-import { API_ENDPOINTS } from '../lib/config';
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  primaryElementalType: string;
-  level: number;
-  experience: number;
-  house?: {
-    id: string;
-    name: string;
-  };
-  attributes?: {
-    health: number;
-    physicalAttack: number;
-    specialAttack: number;
-    physicalDefense: number;
-    specialDefense: number;
-    speed: number;
-  };
-  userSkills?: Array<{
-    skill: {
-      id: string;
-      name: string;
-      description: string;
-      elementalType: string;
-      power: number;
-      accuracy: number;
-    };
-    equipped: boolean;
-  }>;
-  interests?: Array<{
-    id: string;
-    name: string;
-  }>;
-}
-
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (userData: RegisterUserData) => Promise<void>;
-  logout: () => void;
-  error: string | null;
-  isNewUser: boolean;
-}
-
-// Interface para dados de registro
-interface RegisterUserData {
-  username: string;
-  email: string;
-  password: string;
-  primaryElementalType: string;
-  interests: string[];
-}
+import { User, AuthContextType, RegisterUserData } from '../types/auth';
+import { getUserProfile, loginUser, registerUser } from '../lib/authService';
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -85,33 +30,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const token = localStorage.getItem('token');
       
       if (token) {
-        try {
-          // Buscar o perfil do usuário
-          const response = await fetch(API_ENDPOINTS.AUTH.PROFILE, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-          
-          if (response.ok) {
-            const { data } = await response.json();
-            setUser(data);
-          } else {
-            // Token inválido ou expirado
-            localStorage.removeItem('token');
-            setUser(null);
-          }
-        } catch (error) {
-          console.error('Erro ao verificar autenticação:', error);
+        const profile = await getUserProfile(token);
+        
+        if (profile) {
+          setUser(profile);
+        } else {
           localStorage.removeItem('token');
           setUser(null);
-        } finally {
-          setIsLoading(false);
         }
       } else {
         setUser(null);
-        setIsLoading(false);
       }
+      
+      setIsLoading(false);
     };
     
     checkAuth();
@@ -122,64 +53,36 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setError(null);
     setIsNewUser(false);
     
-    try {
-      const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok && data.success) {
-        // Salvar token e informações do usuário
-        localStorage.setItem('token', data.data.token);
-        setUser(data.data.user);
-        router.push('/dashboard');
-      } else {
-        setError(data.message || 'Falha no login. Verifique suas credenciais.');
-      }
-    } catch (error) {
-      console.error('Erro durante o login:', error);
-      setError('Erro ao conectar ao servidor. Tente novamente.');
-    } finally {
-      setIsLoading(false);
+    const response = await loginUser(email, password);
+    
+    if (response.success && response.data) {
+      localStorage.setItem('token', response.data.token);
+      setUser(response.data.user);
+      router.push('/dashboard');
+    } else {
+      setError(response.message || 'Falha no login. Verifique suas credenciais.');
     }
+    
+    setIsLoading(false);
   };
 
   const register = async (userData: RegisterUserData) => {
     setIsLoading(true);
     setError(null);
     
-    try {
-      const response = await fetch(API_ENDPOINTS.AUTH.REGISTER, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(userData)
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok && data.success) {
-        // Se o registro for bem-sucedido, marcar como novo usuário
-        localStorage.setItem('token', data.data.token);
-        setUser(data.data.user);
-        setIsNewUser(true);
-        router.push('/dashboard');
-      } else {
-        throw new Error(data.message || 'Falha no registro. Tente novamente.');
-      }
-    } catch (error) {
-      console.error('Erro durante o registro:', error);
-      setError(error instanceof Error ? error.message : 'Erro ao conectar ao servidor. Tente novamente.');
-      throw error;
-    } finally {
-      setIsLoading(false);
+    const response = await registerUser(userData);
+    
+    if (response.success && response.data) {
+      localStorage.setItem('token', response.data.token);
+      setUser(response.data.user);
+      setIsNewUser(true);
+      router.push('/dashboard');
+    } else {
+      setError(response.message || 'Falha no registro. Tente novamente.');
+      throw new Error(response.message || 'Falha no registro');
     }
+    
+    setIsLoading(false);
   };
 
   const logout = () => {

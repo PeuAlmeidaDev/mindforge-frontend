@@ -9,6 +9,7 @@ import {
   GiWaterDrop, GiEarthCrack, GiWindSlap, GiTreeRoots 
 } from 'react-icons/gi';
 import { WiMoonAltNew } from 'react-icons/wi';
+import { CgMoon } from "react-icons/cg";
 
 interface ElementalTypeIconProps {
   type: string;
@@ -90,7 +91,7 @@ const ElementalTypeIcon: React.FC<ElementalTypeIconProps> = ({
     earth: 'text-amber-800',
     air: 'text-sky-300',
     light: 'text-yellow-300',
-    dark: 'text-purple-900',
+    dark: 'text-purple-800',
     nature: 'text-green-500',
     normal: 'text-gray-500',
     electric: 'text-yellow-400',
@@ -142,7 +143,7 @@ const ElementalTypeIcon: React.FC<ElementalTypeIconProps> = ({
       case 'light':
         return <FaSun size={size} className={combinedClass} />;
       case 'dark':
-        return <WiMoonAltNew size={size} className={combinedClass} />;
+        return <CgMoon size={size} className={combinedClass} />;
       case 'nature':
         return <GiTreeRoots size={size} className={combinedClass} />;
       case 'normal':

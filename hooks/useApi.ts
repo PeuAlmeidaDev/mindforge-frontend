@@ -1,8 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
-
-// URL base da API
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+import { API_URL } from '../lib/config';
 
 // Função para fazer requisições HTTP
 async function fetchApi<T>(
@@ -81,29 +79,8 @@ export function useMutateData<T, R>(
   });
 }
 
-// Exemplo de hook para autenticação
-export function useLogin() {
-  return useMutateData<
-    { email: string; password: string },
-    { token: string; user: any }
-  >('/auth/login', 'POST', ['auth']);
-}
-
-// Exemplo de hook para buscar usuário atual
-export function useCurrentUser() {
-  return useFetchData('/users/me', ['currentUser']);
-}
-
-// Exemplo de hook para buscar metas do usuário
-export function useDailyGoals() {
-  return useFetchData('/goals/daily', ['goals', 'daily']);
-}
-
-// Exemplo de hook para completar uma meta
-export function useCompleteGoal() {
-  return useMutateData<{ goalId: string }, { success: boolean }>(
-    '/goals/complete',
-    'POST',
-    ['goals']
-  );
-} 
+// Exportação de funções auxiliares
+export const api = {
+  fetchApi,
+  fetch: fetchApi // Alias para compatibilidade
+}; 
