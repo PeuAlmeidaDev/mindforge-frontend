@@ -34,6 +34,8 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
       setActiveTab('house');
     } else if (path.includes('/ranking')) {
       setActiveTab('ranking');
+    } else if (path.includes('/profile')) {
+      setActiveTab('profile');
     }
   }, [router.pathname]);
   
@@ -66,6 +68,8 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
           elementalType={user?.primaryElementalType || 'Normal'}
           house={houseName}
           houseColor={theme.colors.primary}
+          experience={user?.experience || 0}
+          experienceToNextLevel={user?.experienceToNextLevel || 100}
         />
       </div>
       
@@ -101,54 +105,60 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
                 theme={theme}
               />
               
-              <MenuButton 
-                label="Ranking" 
-                isActive={activeTab === 'ranking'} 
-                onClick={() => router.push('/ranking')}
-                theme={theme}
-              />
+              <div className="relative group">
+                <MenuButton 
+                  label="Ranking" 
+                  isActive={activeTab === 'ranking'} 
+                  onClick={() => {}}
+                  theme={theme}
+                  disabled={true}
+                  icon={
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      className="h-3 w-3 ml-1" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 10-8 0v4h8z" 
+                      />
+                    </svg>
+                  }
+                />
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                  <div className="text-center">
+                    Ranking estará disponível em breve!
+                  </div>
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                </div>
+              </div>
             </div>
             
             <div className="flex space-x-2">
-              <button 
-                className="relative px-3 py-1.5 text-xs tracking-wide uppercase font-medium rounded-md transition-all duration-300 group"
-                style={{
-                  color: `${theme.colors.text}90`,
-                  backgroundColor: 'transparent'
-                }}
+              <MenuButton 
+                label="Perfil" 
+                isActive={activeTab === 'profile'} 
                 onClick={() => router.push('/profile')}
-              >
-                Perfil
-                {/* Efeito de hover */}
-                <div 
-                  className="absolute inset-0 rounded-md opacity-0 transition-opacity duration-300 group-hover:opacity-10"
-                  style={{ backgroundColor: theme.colors.primary }}
-                ></div>
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-0 group-hover:h-0.5 transition-all duration-300 opacity-0 group-hover:opacity-100"
-                  style={{ backgroundColor: theme.colors.primary }}
-                ></div>
-              </button>
+                theme={theme}
+              />
               
-              <button 
-                className="relative px-3 py-1.5 text-xs tracking-wide uppercase font-medium rounded-md transition-all duration-300 group"
-                style={{
-                  color: `${theme.colors.text}90`,
-                  backgroundColor: 'transparent'
-                }}
+              <MenuButton 
+                label="Sair" 
+                isActive={false} 
                 onClick={() => logout()}
-              >
-                Sair
-                {/* Efeito de hover */}
-                <div 
-                  className="absolute inset-0 rounded-md opacity-0 transition-opacity duration-300 group-hover:opacity-10"
-                  style={{ backgroundColor: '#FF4D4D' }}
-                ></div>
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-0 group-hover:h-0.5 transition-all duration-300 opacity-0 group-hover:opacity-100"
-                  style={{ backgroundColor: '#FF4D4D' }}
-                ></div>
-              </button>
+                theme={{
+                  ...theme,
+                  colors: {
+                    ...theme.colors,
+                    primary: '#FF4D4D'
+                  }
+                }}
+              />
             </div>
           </div>
         </div>

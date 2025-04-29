@@ -12,6 +12,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
   error: null,
   isNewUser: false,
+  token: null,
 });
 
 interface AuthProviderProps {
@@ -23,22 +24,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isNewUser, setIsNewUser] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('token');
+      const storedToken = localStorage.getItem('token');
       
-      if (token) {
-        const profile = await getUserProfile(token);
+      if (storedToken) {
+        setToken(storedToken);
+        const profile = await getUserProfile(storedToken);
         
         if (profile) {
           setUser(profile);
         } else {
           localStorage.removeItem('token');
+          setToken(null);
           setUser(null);
         }
       } else {
+        setToken(null);
         setUser(null);
       }
       
@@ -56,7 +61,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const response = await loginUser(email, password);
     
     if (response.success && response.data) {
-      localStorage.setItem('token', response.data.token);
+      const authToken = response.data.token;
+      localStorage.setItem('token', authToken);
+      setToken(authToken);
       setUser(response.data.user);
       router.push('/dashboard');
     } else {
@@ -73,7 +80,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const response = await registerUser(userData);
     
     if (response.success && response.data) {
-      localStorage.setItem('token', response.data.token);
+      const authToken = response.data.token;
+      localStorage.setItem('token', authToken);
+      setToken(authToken);
       setUser(response.data.user);
       setIsNewUser(true);
       router.push('/dashboard');
@@ -87,6 +96,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    setToken(null);
     setUser(null);
     setIsNewUser(false);
     router.push('/login');
@@ -102,7 +112,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         register,
         logout,
         error,
-        isNewUser
+        isNewUser,
+        token
       }}
     >
       {children}

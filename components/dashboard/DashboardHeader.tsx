@@ -10,6 +10,8 @@ interface DashboardHeaderProps {
   elementalType: string;
   house: string;
   houseColor: string;
+  experience?: number;
+  experienceToNextLevel?: number;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ 
@@ -17,11 +19,34 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   level, 
   elementalType, 
   house,
-  houseColor
+  houseColor,
+  experience = 0,
+  experienceToNextLevel = 100
 }) => {
   const { theme } = useHouseTheme();
   const [elementColor, setElementColor] = useState('#cccccc');
   const [elementTypeDisplay, setElementTypeDisplay] = useState('');
+  
+  // Calcular XP necessário para o próximo nível usando a fórmula
+  const calculateXPForLevel = (targetLevel: number) => {
+    return Math.round(100 * Math.pow(1.5, targetLevel - 1));
+  };
+  
+  // Total de XP necessário para o próximo nível
+  const xpRequiredForNextLevel = calculateXPForLevel(level + 1);
+  
+  // Calcular a porcentagem de progresso para o próximo nível
+  const xpPercentage = Math.min(100, Math.max(0, (experience / xpRequiredForNextLevel) * 100));
+  
+  // Formatar números grandes
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) {
+      return `${(num / 1000000).toFixed(1)}M`;
+    } else if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}K`;
+    }
+    return num.toString();
+  };
   
   // Definir cores com base no tipo elemental
   useEffect(() => {
@@ -205,6 +230,33 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             </div>
           </motion.div>
         </div>
+        
+        {/* Barra de XP */}
+        <motion.div 
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+          className="mt-4"
+        >
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-xs font-medium" style={{ color: `${theme.colors.text}80` }}>
+              EXPERIÊNCIA
+            </span>
+            <span className="text-xs font-medium" style={{ color: `${theme.colors.text}80` }}>
+              {formatNumber(experience)} / {formatNumber(xpRequiredForNextLevel)} XP
+            </span>
+          </div>
+          <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+            <div 
+              className="h-full rounded-full transition-all duration-500 ease-out"
+              style={{ 
+                width: `${xpPercentage}%`,
+                background: `linear-gradient(to right, ${theme.colors.primary}, ${elementColor})`
+              }}
+            />
+          </div>
+        </motion.div>
+        
       </div>
     </header>
   );

@@ -43,6 +43,7 @@ export interface AuthContextType {
   logout: () => void;
   error: string | null;
   isNewUser: boolean;
+  token: string | null;
 }
 
 // Interface para dados de registro

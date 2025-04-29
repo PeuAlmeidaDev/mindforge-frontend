@@ -579,7 +579,16 @@ Authorization: Bearer {token}
             "username": "string",
             "profileImageUrl": "string" | null,
             "primaryElementalType": "string",
-            "level": number
+            "secondaryElementalType": "string" | null,
+            "level": number,
+            "attributes": {
+              "health": number,
+              "physicalAttack": number,
+              "specialAttack": number,
+              "physicalDefense": number,
+              "specialDefense": number,
+              "speed": number
+            }
           } | null,
           "enemy": {
             "id": "string",
@@ -587,7 +596,13 @@ Authorization: Bearer {token}
             "imageUrl": "string",
             "elementalType": "string",
             "rarity": "string",
-            "isBoss": boolean
+            "isBoss": boolean,
+            "health": number,
+            "physicalAttack": number,
+            "specialAttack": number,
+            "physicalDefense": number,
+            "specialDefense": number,
+            "speed": number
           } | null,
           "statusEffects": [],
           "buffs": [],
@@ -647,7 +662,16 @@ Authorization: Bearer {token}
           "username": "string",
           "profileImageUrl": "string" | null,
           "primaryElementalType": "string",
-          "level": number
+          "secondaryElementalType": "string" | null,
+          "level": number,
+          "attributes": {
+            "health": number,
+            "physicalAttack": number,
+            "specialAttack": number,
+            "physicalDefense": number,
+            "specialDefense": number,
+            "speed": number
+          }
         } | null,
         "enemy": {
           "id": "string",
@@ -655,7 +679,13 @@ Authorization: Bearer {token}
           "imageUrl": "string",
           "elementalType": "string",
           "rarity": "string",
-          "isBoss": boolean
+          "isBoss": boolean,
+          "health": number,
+          "physicalAttack": number,
+          "specialAttack": number,
+          "physicalDefense": number,
+          "specialDefense": number,
+          "speed": number
         } | null,
         "statusEffects": [],
         "buffs": [],
@@ -734,7 +764,16 @@ Authorization: Bearer {token}
           "username": "string",
           "profileImageUrl": "string" | null,
           "primaryElementalType": "string",
-          "level": number
+          "secondaryElementalType": "string" | null,
+          "level": number,
+          "attributes": {
+            "health": number,
+            "physicalAttack": number,
+            "specialAttack": number,
+            "physicalDefense": number,
+            "specialDefense": number,
+            "speed": number
+          }
         } | null,
         "enemy": {
           "id": "string",
@@ -742,7 +781,13 @@ Authorization: Bearer {token}
           "imageUrl": "string",
           "elementalType": "string",
           "rarity": "string",
-          "isBoss": boolean
+          "isBoss": boolean,
+          "health": number,
+          "physicalAttack": number,
+          "specialAttack": number,
+          "physicalDefense": number,
+          "specialDefense": number,
+          "speed": number
         } | null,
         "statusEffects": [],
         "buffs": [],
@@ -784,6 +829,10 @@ Authorization: Bearer {token}
   ]
 }
 ```
+
+**Observações:**
+- Os dados do inimigo retornam informações completas incluindo atributos e estatísticas (health, attacks, defenses, speed) para melhor visualização no frontend durante as batalhas.
+- As propriedades do usuário também incluem seus atributos detalhados para referência durante o combate.
 
 **Resposta de Sucesso (200):**
 ```json
@@ -837,6 +886,36 @@ Authorization: Bearer {token}
         "currentPhysicalDefense": number,
         "currentSpecialDefense": number,
         "currentSpeed": number,
+        "user": {
+          "id": "string",
+          "username": "string",
+          "profileImageUrl": "string" | null,
+          "primaryElementalType": "string",
+          "secondaryElementalType": "string" | null,
+          "level": number,
+          "attributes": {
+            "health": number,
+            "physicalAttack": number,
+            "specialAttack": number,
+            "physicalDefense": number,
+            "specialDefense": number,
+            "speed": number
+          }
+        } | null,
+        "enemy": {
+          "id": "string",
+          "name": "string",
+          "imageUrl": "string",
+          "elementalType": "string",
+          "rarity": "string",
+          "isBoss": boolean,
+          "health": number,
+          "physicalAttack": number,
+          "specialAttack": number,
+          "physicalDefense": number,
+          "specialDefense": number,
+          "speed": number
+        } | null,
         "statusEffects": [],
         "buffs": [],
         "debuffs": []
@@ -902,4 +981,4 @@ Authorization: Bearer {token}
 - 403: Usuário não pode receber recompensas por uma batalha que não venceu
 - 403: Usuário não participou desta batalha
 - 404: Batalha não encontrada
-- 500: Erro ao obter recompensas da batalha 
+- 500: Erro ao obter recompensas da batalha

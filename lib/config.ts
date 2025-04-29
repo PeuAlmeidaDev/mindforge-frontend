@@ -29,6 +29,13 @@ export const API_ENDPOINTS = {
   },
   USERS: {
     STATS: (userId: string) => `${API_URL}/users/${userId}/stats`,
+  },
+  BATTLES: {
+    LIST: `${API_URL}/battles`,
+    DETAIL: (battleId: string) => `${API_URL}/battles/${battleId}`,
+    CREATE_RANDOM: `${API_URL}/battles/random`,
+    PROCESS_TURN: (battleId: string) => `${API_URL}/battles/${battleId}/turn`,
+    REWARDS: (battleId: string) => `${API_URL}/battles/${battleId}/rewards`,
   }
 };
 
