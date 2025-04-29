@@ -35,7 +35,7 @@ npm run dev
 yarn dev
 ```
 
-4. Abra [http://localhost:3000](http://localhost:3000) no seu navegador para ver o resultado.
+4. Abra [http://localhost:3001](http://localhost:3001) no seu navegador para ver o resultado.
 
 ## Estrutura do Projeto
 
