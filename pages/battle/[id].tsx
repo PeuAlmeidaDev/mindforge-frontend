@@ -78,6 +78,8 @@ const BattleDetailsPage: NextPage = () => {
     if (id && user && token) {
       setLoading(true);
       
+      console.log('Carregando dados da batalha:', id);
+      
       // Chamada à API para obter detalhes da batalha
       fetch(`http://localhost:3000/api/battles/${id}`, {
         headers: {

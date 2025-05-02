@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { User, AuthContextType, RegisterUserData } from '../types/auth';
 import { getUserProfile, loginUser, registerUser } from '../lib/authService';
@@ -13,6 +13,8 @@ const AuthContext = createContext<AuthContextType>({
   error: null,
   isNewUser: false,
   token: null,
+  setUser: () => {},
+  refreshUserData: async () => {}
 });
 
 interface AuthProviderProps {
@@ -26,6 +28,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isNewUser, setIsNewUser] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
+  
+  // Controle de tempo para atualizações
+  const lastRefreshRef = useRef<number>(0);
+  const updateThreshold = 5000; // 5 segundos entre atualizações
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -102,6 +108,31 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     router.push('/login');
   };
 
+  const refreshUserData = async (force = false) => {
+    if (!token) return;
+    
+    // Verificar se passou tempo suficiente desde a última atualização
+    const now = Date.now();
+    if (!force && now - lastRefreshRef.current < updateThreshold) {
+      console.log('Atualização via Auth ignorada (muito frequente)');
+      return;
+    }
+    
+    // Atualizar timestamp
+    lastRefreshRef.current = now;
+    
+    console.log('Atualizando dados do usuário via Auth API');
+    
+    try {
+      const profile = await getUserProfile(token);
+      if (profile) {
+        setUser(profile);
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar dados do usuário:', error);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -113,7 +144,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         logout,
         error,
         isNewUser,
-        token
+        token,
+        setUser,
+        refreshUserData
       }}
     >
       {children}

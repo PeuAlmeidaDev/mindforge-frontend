@@ -38,6 +38,7 @@ const BattlesList: React.FC = () => {
   const [battles, setBattles] = useState<BattleListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [displayLimit, setDisplayLimit] = useState(10);
 
   useEffect(() => {
     if (token) {
@@ -61,7 +62,11 @@ const BattlesList: React.FC = () => {
       const data = await response.json();
       
       if (data.success) {
-        setBattles(data.data);
+        // Ordena as batalhas pela data mais recente primeiro
+        const sortedBattles = data.data.sort((a: BattleListItem, b: BattleListItem) => {
+          return new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime();
+        });
+        setBattles(sortedBattles);
       } else {
         throw new Error(data.message || 'Erro ao carregar batalhas');
       }
@@ -69,75 +74,8 @@ const BattlesList: React.FC = () => {
       console.error('Erro ao buscar batalhas:', error);
       setError(error instanceof Error ? error.message : 'Erro ao carregar batalhas');
       
-      // Dados de exemplo para desenvolvimento
-      const mockBattles: BattleListItem[] = [
-        {
-          id: 'battle-123',
-          currentTurn: 2,
-          isFinished: false,
-          winnerId: null,
-          startedAt: new Date().toISOString(),
-          participants: [
-            { 
-              id: 'participant-1', 
-              participantType: 'player', 
-              userId: user?.id || 'user-1',
-              currentHealth: 100,
-              user: { 
-                id: user?.id || 'user-1', 
-                username: 'Você', 
-                level: 5 
-              }, 
-              enemy: null 
-            },
-            { 
-              id: 'participant-2', 
-              participantType: 'enemy',
-              currentHealth: 100,
-              user: null, 
-              enemy: { 
-                name: 'Dragão de Fogo', 
-                imageUrl: '/placeholder.png', 
-                rarity: 'rare' 
-              } 
-            }
-          ]
-        },
-        {
-          id: 'battle-456',
-          currentTurn: 5,
-          isFinished: true,
-          winnerId: user?.id || 'user-1',
-          startedAt: new Date(Date.now() - 3600000).toISOString(),
-          participants: [
-            { 
-              id: 'participant-3', 
-              participantType: 'player',
-              userId: user?.id || 'user-1',
-              currentHealth: 75,
-              user: { 
-                id: user?.id || 'user-1', 
-                username: 'Você', 
-                level: 5 
-              }, 
-              enemy: null 
-            },
-            { 
-              id: 'participant-4', 
-              participantType: 'enemy',
-              currentHealth: 0,
-              user: null, 
-              enemy: { 
-                name: 'Golem de Pedra', 
-                imageUrl: '/placeholder.png', 
-                rarity: 'common' 
-              } 
-            }
-          ]
-        }
-      ];
-      
-      setBattles(mockBattles);
+      // Removendo dados de exemplo
+      setBattles([]);
     } finally {
       setLoading(false);
     }
@@ -153,21 +91,27 @@ const BattlesList: React.FC = () => {
       return { label: 'Indeterminado', icon: <FaHourglassHalf className="text-yellow-500" /> };
     }
 
-    // Caso 1: WinnerId definido - simplesmente comparamos com o ID do usuário
+    // Encontra o participante do usuário
+    const userParticipant = battle.participants.find(p => 
+      (p.participantType === 'user' || p.participantType === 'player') && 
+      (p.userId === user.id || (p.user && p.user.id === user.id))
+    );
+    
+    // Se não encontrarmos o participante do usuário, não podemos determinar
+    if (!userParticipant) {
+      return { label: 'Indeterminado', icon: <FaHourglassHalf className="text-yellow-500" /> };
+    }
+    
+    // Verifica se o ID do participante do usuário é o vencedor
     if (battle.winnerId) {
-      if (battle.winnerId === user.id) {
+      if (battle.winnerId === userParticipant.id) {
         return { label: 'Vitória', icon: <FaCheckCircle className="text-green-500" /> };
       } else {
         return { label: 'Derrota', icon: <FaSkull className="text-red-500" /> };
       }
     }
 
-    // Caso 2: WinnerId não definido - verificamos estado dos participantes
-    const userParticipant = battle.participants.find(p => 
-      (p.participantType === 'user' || p.participantType === 'player') && 
-      (p.userId === user.id || (p.user && p.user.id === user.id))
-    );
-    
+    // Se winnerId não estiver definido, verificamos pelo estado de saúde
     const enemyParticipant = battle.participants.find(p => 
       p.participantType === 'enemy'
     );
@@ -253,7 +197,7 @@ const BattlesList: React.FC = () => {
       </h2>
       
       <div className="space-y-4">
-        {battles.map((battle) => {
+        {battles.slice(0, displayLimit).map((battle) => {
           const status = getBattleStatus(battle);
           
           return (
@@ -270,21 +214,37 @@ const BattlesList: React.FC = () => {
                   <span className="ml-2" style={{ color: theme.colors.text }}>
                     {status.label}
                   </span>
+                  {battle.isFinished && (
+                    <span className="ml-3 px-2 py-0.5 text-xs rounded-full" style={{ 
+                      backgroundColor: theme.colors.secondary,
+                      color: theme.colors.text
+                    }}>
+                      Finalizada
+                    </span>
+                  )}
                 </div>
                 <h3 className="font-medium" style={{ color: theme.colors.primary }}>
                   VS {getOpponentName(battle)}
                 </h3>
-                <div className="flex items-center mt-1 text-sm" style={{ color: theme.colors.text }}>
-                  <FaClock className="mr-1" />
-                  <span>{formatDate(battle.startedAt)}</span>
+                <div className="flex items-center gap-3 mt-1 text-sm" style={{ color: theme.colors.text }}>
+                  <div className="flex items-center">
+                    <FaClock className="mr-1" />
+                    <span>{formatDate(battle.startedAt)}</span>
+                  </div>
+                  <div>
+                    <span>Turno {battle.currentTurn}</span>
+                  </div>
                 </div>
               </div>
               
               <button
                 onClick={() => router.push(`/battle/${battle.id}`)}
-                className="p-3 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: !battle.isFinished ? theme.colors.primary : theme.colors.secondary }}
-                disabled={battle.isFinished}
+                className="p-3 rounded-full flex items-center justify-center transition-colors"
+                style={{ 
+                  backgroundColor: theme.colors.primary,
+                  opacity: battle.isFinished ? 0.8 : 1
+                }}
+                title={battle.isFinished ? "Ver detalhes da batalha finalizada" : "Continuar batalha"}
               >
                 <FaArrowRight color={theme.colors.text} />
               </button>
@@ -292,6 +252,18 @@ const BattlesList: React.FC = () => {
           );
         })}
       </div>
+      
+      {battles.length > displayLimit && (
+        <div className="text-center mt-4">
+          <button
+            onClick={() => setDisplayLimit(prev => prev + 10)}
+            className="px-4 py-2 rounded-md"
+            style={{ backgroundColor: theme.colors.secondary, color: theme.colors.text }}
+          >
+            Carregar mais
+          </button>
+        </div>
+      )}
     </div>
   );
 };

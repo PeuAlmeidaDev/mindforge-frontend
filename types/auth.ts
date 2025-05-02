@@ -44,6 +44,8 @@ export interface AuthContextType {
   error: string | null;
   isNewUser: boolean;
   token: string | null;
+  setUser: (user: User) => void;
+  refreshUserData: () => Promise<void>;
 }
 
 // Interface para dados de registro

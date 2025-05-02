@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import useHouseTheme from '../../hooks/useHouseTheme';
 import useAuth from '../../hooks/useAuth';
+import useUser from '../../hooks/useUser';
 import { motion } from 'framer-motion';
 import BattleHeader from './BattleHeader';
 import ParticipantCard from './ParticipantCard';
@@ -54,14 +55,6 @@ interface BattleProps {
   participants: BattleParticipant[];
 }
 
-// Mock de skills para desenvolvimento (apenas como fallback)
-const MOCK_SKILLS = [
-  { id: 'skill-1', name: 'Rajada de Água', elementalType: 'WATER', power: 25, accuracy: 90, description: 'Lança um jato de água pressurizada', targetType: 'single' as 'single' | 'all' },
-  { id: 'skill-2', name: 'Bola de Fogo', elementalType: 'FIRE', power: 30, accuracy: 85, description: 'Lança uma bola de fogo', targetType: 'single' as 'single' | 'all' },
-  { id: 'skill-3', name: 'Raio Psíquico', elementalType: 'PSYCHIC', power: 20, accuracy: 95, description: 'Ataca com energia psíquica', targetType: 'single' as 'single' | 'all' },
-  { id: 'skill-4', name: 'Terremoto', elementalType: 'EARTH', power: 35, accuracy: 80, description: 'Um forte tremor de terra atinge todos os oponentes', targetType: 'all' as 'single' | 'all' },
-];
-
 interface BattleArenaProps {
   battle: BattleProps;
 }
@@ -94,7 +87,8 @@ interface ActionResult {
 
 const BattleArena: React.FC<BattleArenaProps> = ({ battle }) => {
   const { theme } = useHouseTheme();
-  const { token, user } = useAuth();
+  const { token, user, refreshUserData } = useAuth();
+  const { refreshUserData: userRefresh, updateAfterBattle } = useUser();
   const router = useRouter();
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
@@ -112,18 +106,16 @@ const BattleArena: React.FC<BattleArenaProps> = ({ battle }) => {
   // Obter as skills do usuário logado
   const userSkills = user?.userSkills?.filter(skill => skill.equipped) || [];
   
-  // Transformar as skills do usuário para o formato esperado (ou usar mock se não tiver skills)
-  const availableSkills = userSkills.length > 0 
-    ? userSkills.map(userSkill => ({
-        id: userSkill.skill.id,
-        name: userSkill.skill.name,
-        elementalType: userSkill.skill.elementalType,
-        power: userSkill.skill.power,
-        accuracy: userSkill.skill.accuracy,
-        description: userSkill.skill.description,
-        targetType: 'single' as 'single' | 'all', // Assumindo single como padrão se não tiver essa info
-      }))
-    : MOCK_SKILLS; // Fallback para o mock caso o usuário não tenha skills
+  // Transformar as skills do usuário para o formato esperado
+  const availableSkills = userSkills.map(userSkill => ({
+    id: userSkill.skill.id,
+    name: userSkill.skill.name,
+    elementalType: userSkill.skill.elementalType,
+    power: userSkill.skill.power,
+    accuracy: userSkill.skill.accuracy,
+    description: userSkill.skill.description,
+    targetType: 'single' as 'single' | 'all', // Assume single como padrão
+  }));
   
   // Verificar todos os tipos de participantes possíveis
   const playerTeam = battleState.participants.filter(p => 
@@ -196,6 +188,11 @@ const BattleArena: React.FC<BattleArenaProps> = ({ battle }) => {
   };
   
   const handleSubmitTurn = async () => {
+    if (availableSkills.length === 0) {
+      alert('Você não possui nenhuma habilidade equipada para batalhar!');
+      return;
+    }
+
     if (!selectedSkill) {
       // Se não selecionou skill, escolhe a primeira automaticamente
       setSelectedSkill(availableSkills[0]?.id || null);
@@ -285,34 +282,26 @@ const BattleArena: React.FC<BattleArenaProps> = ({ battle }) => {
     } catch (error) {
       console.error('Erro ao processar turno:', error);
       
-      // Simulação para desenvolvimento
-      // Em produção, lidar melhor com erros
-      setTimeout(() => {
-        setTurnPhase('result');
-        
-        if (battleState.currentTurn >= 3) {
-          setShowResults(true);
-        } else {
-          // Próximo turno simulado
-          setBattleState({
-            ...battleState,
-            currentTurn: battleState.currentTurn + 1
-          });
-        }
-      }, 2000);
+      // Substituindo a simulação por um alerta e retorno à fase de seleção
+      alert('Houve um erro ao processar o turno. Por favor, tente novamente.');
+      setTurnPhase('selection');
     }
   };
   
   const fetchBattleRewards = async () => {
+    if (!turnResult || !turnResult.isFinished || !token) {
+      return;
+    }
+
     try {
-      const response = await fetch(`http://localhost:3000/api/battles/${battleState.id}/rewards`, {
+      const response = await fetch(`http://localhost:3000/api/battles/${battle.id}/rewards`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
       if (!response.ok) {
-        throw new Error('Erro ao obter recompensas');
+        throw new Error('Falha ao obter recompensas da batalha');
       }
       
       const data = await response.json();
@@ -322,17 +311,13 @@ const BattleArena: React.FC<BattleArenaProps> = ({ battle }) => {
           experience: data.data.experience,
           levelUp: data.data.levelUp
         });
-        setShowResults(true);
+        return data.data; // Retornando os dados para uso em outras funções
+      } else {
+        throw new Error(data.message || 'Falha ao obter recompensas');
       }
     } catch (error) {
       console.error('Erro ao obter recompensas:', error);
-      
-      // Simulação para desenvolvimento
-      setBattleRewards({
-        experience: 150,
-        levelUp: false
-      });
-      setShowResults(true);
+      return null;
     }
   };
   
@@ -345,15 +330,48 @@ const BattleArena: React.FC<BattleArenaProps> = ({ battle }) => {
     setTurnResult(null);
   };
   
+  // Função para finalizar a batalha
+  const finalizeBattle = useCallback(async () => {
+    if (!turnResult || !turnResult.isFinished) return;
+    
+    try {
+      // Buscar recompensas da batalha
+      await fetchBattleRewards();
+      
+      // NÃO atualiza dados nesse momento, apenas exibe o modal
+      // para evitar atualizações constantes
+      console.log('Finalizando batalha - os dados serão atualizados quando o modal for fechado');
+      
+      // Exibir modal de resultados
+      setShowResults(true);
+    } catch (error) {
+      console.error('Erro ao finalizar batalha:', error);
+      alert('Ocorreu um erro ao finalizar a batalha');
+      router.push('/battle');
+    }
+  }, [battle.id, fetchBattleRewards, turnResult]);
+
+  // Efeito para verificar se a batalha foi finalizada
+  useEffect(() => {
+    if (turnResult && turnResult.isFinished) {
+      finalizeBattle();
+    }
+  }, [turnResult, finalizeBattle]);
+  
   if (showResults) {
     return (
       <BattleResultModal 
         result={{ 
           victory: turnResult?.winnerTeam === 'player',
           experienceGained: battleRewards?.experience || 0, 
-          levelUp: battleRewards?.levelUp || false 
+          levelUp: battleRewards?.levelUp || false,
+          battleId: battle.id
         }}
-        onClose={() => router.push('/battle')}
+        onClose={() => {
+          // A atualização de dados está acontecendo dentro do BattleResultModal
+          // quando o botão é clicado, não aqui
+          router.push('/battle');
+        }}
       />
     );
   }
@@ -410,33 +428,50 @@ const BattleArena: React.FC<BattleArenaProps> = ({ battle }) => {
             Escolha sua ação
           </h3>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            {availableSkills.map(skill => (
-              <SkillSelector
-                key={skill.id}
-                skill={skill}
-                isSelected={selectedSkill === skill.id}
-                onClick={() => handleSkillSelect(skill.id)}
-              />
-            ))}
-          </div>
-          
-          <div className="flex justify-end mt-4">
-            <button
-              onClick={handleSubmitTurn}
-              disabled={!selectedSkill || (!selectedTarget && selectedTarget !== 'all')}
-              className={`py-2 px-6 rounded-md flex items-center ${
-                !selectedSkill || (!selectedTarget && selectedTarget !== 'all') ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-              style={{ 
-                backgroundColor: theme.colors.primary,
-                color: theme.colors.text
-              }}
-            >
-              <span className="mr-2">Confirmar</span>
-              <FaArrowRight />
-            </button>
-          </div>
+          {availableSkills.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                {availableSkills.map(skill => (
+                  <SkillSelector
+                    key={skill.id}
+                    skill={skill}
+                    isSelected={selectedSkill === skill.id}
+                    onClick={() => handleSkillSelect(skill.id)}
+                  />
+                ))}
+              </div>
+              
+              <div className="flex justify-end mt-4">
+                <button
+                  onClick={handleSubmitTurn}
+                  disabled={!selectedSkill || (!selectedTarget && selectedTarget !== 'all')}
+                  className={`py-2 px-6 rounded-md flex items-center ${
+                    !selectedSkill || (!selectedTarget && selectedTarget !== 'all') ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  style={{ 
+                    backgroundColor: theme.colors.primary,
+                    color: theme.colors.text
+                  }}
+                >
+                  <span className="mr-2">Confirmar</span>
+                  <FaArrowRight />
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="text-center p-4 rounded-lg" style={{ backgroundColor: theme.colors.background }}>
+              <p style={{ color: theme.colors.text }}>
+                Você não possui nenhuma habilidade equipada para batalhar!
+              </p>
+              <button 
+                onClick={() => router.push('/profile/skills')}
+                className="mt-4 py-2 px-4 rounded-md"
+                style={{ backgroundColor: theme.colors.primary, color: theme.colors.text }}
+              >
+                Equipar habilidades
+              </button>
+            </div>
+          )}
         </div>
       )}
       
@@ -544,21 +579,10 @@ const BattleArena: React.FC<BattleArenaProps> = ({ battle }) => {
             <>
               <div className="mb-4">
                 <h4 className="font-medium mb-2" style={{ color: theme.colors.secondary }}>
-                  Seu ataque:
+                  Resultados do turno:
                 </h4>
                 <p style={{ color: theme.colors.text }}>
-                  Você usou <span style={{ color: theme.colors.primary }}>
-                    {availableSkills.find(s => s.id === selectedSkill)?.name || 'Ataque básico'}
-                  </span> e causou <span style={{ color: theme.colors.accent }}>25 de dano</span>!
-                </p>
-              </div>
-              
-              <div className="mb-4">
-                <h4 className="font-medium mb-2" style={{ color: theme.colors.secondary }}>
-                  Ataque inimigo:
-                </h4>
-                <p style={{ color: theme.colors.text }}>
-                  {enemyTeam[0]?.enemy?.name || 'Dragão de Fogo'} usou <span style={{ color: theme.colors.primary }}>Bola de Fogo</span> e causou <span style={{ color: theme.colors.accent }}>20 de dano</span>!
+                  Não foi possível carregar os detalhes das ações deste turno.
                 </p>
               </div>
             </>

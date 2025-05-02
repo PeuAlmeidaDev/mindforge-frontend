@@ -3,6 +3,7 @@ import MenuButton from './MenuButton';
 import DashboardHeader from './DashboardHeader';
 import { useRouter } from 'next/router';
 import useAuth from '../../hooks/useAuth';
+import useUser from '../../hooks/useUser';
 
 interface HeaderSectionProps {
   theme: any;
@@ -21,7 +22,15 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, refreshUserData } = useAuth();
+  const { refreshUserData: userRefresh } = useUser();
+  
+  // Atualizações apenas quando o HeaderSection é montado pela primeira vez
+  // e não a cada mudança de rota
+  useEffect(() => {
+    // Eliminar esta atualização automática, pois está causando atualizações excessivas
+    // As atualizações serão feitas em pontos específicos da aplicação
+  }, []);
   
   // Atualizar a aba ativa com base na rota atual
   useEffect(() => {

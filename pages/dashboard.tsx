@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import useAuth from '../hooks/useAuth';
+import useUser from '../hooks/useUser';
 import useHouseTheme from '../hooks/useHouseTheme';
 import useHouseReveal from '../hooks/useHouseReveal';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
@@ -35,7 +36,8 @@ const MOCK_ACTIVITIES: Activity[] = [
 
 export default function Dashboard() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, logout, refreshUserData } = useAuth();
+  const { refreshUserData: refreshUserProfile } = useUser();
   const { theme } = useHouseTheme();
   const { showReveal, completeReveal, isLoading: revealLoading } = useHouseReveal();
   const [goals, setGoals] = useState<any[]>([]);
@@ -48,20 +50,36 @@ export default function Dashboard() {
   const hasHouse = Boolean(user && user.house && user.house.name);
   const houseName = user?.house?.name || 'Sem Casa';
 
+  // Função para atualizar os dados do usuário, mas não atualizar as metas automaticamente
+  const updateUserData = async () => {
+    console.log('Atualizando dados do usuário no Dashboard');
+    if (refreshUserData) await refreshUserData();
+    if (refreshUserProfile) await refreshUserProfile();
+  };
+
+  // Separar o carregamento de dados para que as metas não atualizem constantemente
   useEffect(() => {
     // Redirecionar para login se não estiver autenticado
     if (!isAuthenticated && !isLoading) {
       router.push('/login');
     }
     
-    // Buscar metas do usuário se estiver autenticado
+    // Atualizar apenas os dados do usuário quando o dashboard é carregado
     if (isAuthenticated && user) {
-      fetchUserGoals();
+      updateUserData();
     }
     
     // Atualizar visibilidade do dashboard quando o estado de showReveal mudar
     setDashboardVisible(!showReveal);
   }, [isAuthenticated, isLoading, router, user, showReveal]);
+  
+  // Efeito separado para carregar as metas apenas uma vez quando o dashboard é montado
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log('Carregando metas uma única vez');
+      fetchUserGoals();
+    }
+  }, [isAuthenticated, user]); // Remove router e showReveal para evitar atualizações desnecessárias
 
   // Função para extrair o nome do interesse de forma segura, lidando com diferentes estruturas
   const getInterestName = (goal: any): string => {
@@ -386,13 +404,16 @@ export default function Dashboard() {
       });
       
       if (response.ok) {
+        // Atualizar apenas o estado local, sem fazer nova requisição
         setGoals(prevGoals => 
           prevGoals.map(goal => 
             goal.id === goalId ? { ...goal, completed: true } : goal
           )
         );
         
-        fetchUserGoals();
+        // Atualizar o perfil do usuário para refletir mudanças na experiência, etc.
+        // mas sem buscar as metas novamente
+        updateUserData();
       }
     } catch (error) {
       console.error('Erro ao completar meta:', error);
