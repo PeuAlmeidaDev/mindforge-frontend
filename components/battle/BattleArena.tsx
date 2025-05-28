@@ -10,40 +10,8 @@ import SkillSelector from './SkillSelector';
 import BattleResultModal from './BattleResultModal';
 import BattleGrid from './BattleGrid';
 import { FaArrowRight, FaHourglassHalf, FaChevronLeft } from 'react-icons/fa';
-
-interface BattleParticipant {
-  id: string;
-  participantType: string;
-  teamId: string;
-  position: number;
-  currentHealth: number;
-  maxHealth?: number;
-  currentPhysicalAttack: number;
-  currentSpecialAttack: number;
-  currentPhysicalDefense: number;
-  currentSpecialDefense: number;
-  currentSpeed: number;
-  userId?: string;
-  enemyId?: string;
-  user?: {
-    id: string;
-    username: string;
-    profileImageUrl?: string;
-    primaryElementalType: string;
-    level: number;
-  };
-  enemy?: {
-    id: string;
-    name: string;
-    imageUrl: string;
-    elementalType: string;
-    rarity: string;
-    isBoss: boolean;
-  };
-  statusEffects: any[];
-  buffs: any[];
-  debuffs: any[];
-}
+import { BattleParticipant, BattleData } from '../../types/battleTypes';
+import { API_ENDPOINTS } from '../../lib/config';
 
 interface BattleProps {
   id: string;
@@ -231,7 +199,7 @@ const BattleArena: React.FC<BattleArenaProps> = ({ battle }) => {
       }];
       
       // Chamar a API para processar o turno
-      const response = await fetch(`http://localhost:3000/api/battles/${battleState.id}/turn`, {
+      const response = await fetch(`${API_ENDPOINTS.BATTLES.DETAIL(battleState.id)}/turn`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -294,7 +262,7 @@ const BattleArena: React.FC<BattleArenaProps> = ({ battle }) => {
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/api/battles/${battle.id}/rewards`, {
+      const response = await fetch(API_ENDPOINTS.BATTLES.REWARDS(battle.id), {
         headers: {
           'Authorization': `Bearer ${token}`
         }

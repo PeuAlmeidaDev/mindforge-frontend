@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { verifyToken } from '../../../lib/auth';
+import { API_URL } from '../../../lib/config';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Verificar autenticação
@@ -16,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'GET') {
     try {
       // Buscar batalhas do backend
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/battles`, {
+      const response = await fetch(`${API_URL}/battles`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

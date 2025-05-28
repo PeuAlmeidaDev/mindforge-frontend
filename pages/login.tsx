@@ -6,59 +6,36 @@ import Head from 'next/head';
 import useAuth from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 
+interface LoginResponse {
+  success: boolean;
+  message?: string;
+  token?: string;
+  data?: {
+    token: string;
+    user: any;
+  };
+}
+
 export default function Login() {
-  const router = useRouter();
-  const { login, isLoading: authLoading, error: authError } = useAuth();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [apiError, setApiError] = useState('');
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Limpar erro quando o usuário começa a corrigir
-    if (errors[name]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email é obrigatório';
-    }
-    
-    if (!formData.password) {
-      newErrors.password = 'Senha é obrigatória';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const [authError, setAuthError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
-    
     setIsLoading(true);
     setApiError('');
-    
+    setAuthError('');
+
     try {
-      await login(formData.email, formData.password);
-      // Redirecionamento é feito dentro da função login
-    } catch (error) {
-      setApiError(error instanceof Error ? error.message : 'Ocorreu um erro inesperado');
+      await login(email, password);
+      // O redirecionamento é feito dentro da função login
+    } catch (error: any) {
+      console.error('Erro no login:', error);
+      setApiError(error.message || 'Erro ao conectar ao servidor');
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +48,7 @@ export default function Login() {
         <meta name="description" content="Entre na sua conta Mindforge" />
       </Head>
       
-      <div className="min-h-screen bg-[#060d08] flex flex-col justify-center items-center p-4 sm:p-6">
+      <div className="min-h-screen bg-gradient-to-br from-green-900 to-black flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <motion.div 
             className="flex justify-center mb-6"
@@ -114,84 +91,45 @@ export default function Login() {
               </motion.div>
             )}
             
-            <motion.form 
-              onSubmit={handleSubmit} 
-              className="space-y-5"
-              initial="hidden"
-              animate="visible"
-              variants={{
-                hidden: { opacity: 0 },
-                visible: {
-                  opacity: 1,
-                  transition: {
-                    staggerChildren: 0.1,
-                    when: "beforeChildren"
-                  }
-                }
-              }}
-            >
-              {/* Campo de usuário oculto para acessibilidade */}
-              <input 
-                type="text" 
-                name="username" 
-                id="username"
-                autoComplete="username"
-                aria-hidden="true"
-                style={{ display: 'none' }}
-              />
-              
-              <motion.div 
-                variants={{
-                  hidden: { y: 20, opacity: 0 },
-                  visible: { y: 0, opacity: 1, transition: { duration: 0.3 } }
-                }}
-              >
-                <label htmlFor="email" className="block text-green-300 mb-1">Email</label>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-green-400 mb-1">
+                  Email
+                </label>
                 <input
                   type="email"
                   id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 rounded bg-black/60 border ${errors.email ? 'border-red-500' : 'border-green-700'} text-white focus:outline-none focus:ring-2 focus:ring-green-500`}
-                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-black/50 border border-green-900/50 rounded px-3 py-2 text-white focus:outline-none focus:border-green-500 transition"
+                  required
                 />
-                {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
-              </motion.div>
+              </div>
               
-              <motion.div 
-                variants={{
-                  hidden: { y: 20, opacity: 0 },
-                  visible: { y: 0, opacity: 1, transition: { duration: 0.3 } }
-                }}
-              >
-                <label htmlFor="password" className="block text-green-300 mb-1">Senha</label>
+              <div>
+                <label htmlFor="password" className="block text-green-400 mb-1">
+                  Senha
+                </label>
                 <input
                   type="password"
                   id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 rounded bg-black/60 border ${errors.password ? 'border-red-500' : 'border-green-700'} text-white focus:outline-none focus:ring-2 focus:ring-green-500`}
-                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-black/50 border border-green-900/50 rounded px-3 py-2 text-white focus:outline-none focus:border-green-500 transition"
+                  required
                 />
-                {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
-              </motion.div>
+              </div>
               
-              <motion.button
+              <button
                 type="submit"
-                disabled={isLoading || authLoading}
-                className="w-full py-2 px-4 bg-green-700 hover:bg-green-600 text-white font-medium rounded transition duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
-                variants={{
-                  hidden: { y: 20, opacity: 0 },
-                  visible: { y: 0, opacity: 1, transition: { duration: 0.3 } }
-                }}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
+                disabled={isLoading}
+                className={`w-full bg-green-600 text-white rounded py-2 px-4 hover:bg-green-700 transition ${
+                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
-                {isLoading || authLoading ? 'Entrando...' : 'Entrar'}
-              </motion.button>
-            </motion.form>
+                {isLoading ? 'Entrando...' : 'Entrar'}
+              </button>
+            </form>
             
             <motion.div 
               className="mt-6 text-center"

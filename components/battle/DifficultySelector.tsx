@@ -11,6 +11,7 @@ import {
   FaDice, 
   FaSpinner 
 } from 'react-icons/fa';
+import { API_ENDPOINTS } from '../../lib/config';
 
 // Já que react-icons não tem FaSwords, vamos criar um componente personalizado
 const FaSwords = () => (
@@ -77,7 +78,7 @@ const DifficultySelector: React.FC = () => {
         throw new Error('Dificuldade inválida selecionada');
       }
 
-      const response = await fetch('http://localhost:3000/api/battles/random', {
+      const response = await fetch(API_ENDPOINTS.BATTLES.RANDOM, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import useAuth from './useAuth';
+import { API_ENDPOINTS } from '../lib/config';
 
 const useUser = () => {
   const { user, token, setUser } = useAuth();
@@ -32,7 +33,7 @@ const useUser = () => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:3000/api/users/profile', {
+      const response = await fetch(API_ENDPOINTS.USERS.PROFILE, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

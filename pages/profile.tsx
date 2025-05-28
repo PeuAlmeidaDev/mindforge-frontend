@@ -214,9 +214,7 @@ const ProfilePage = () => {
       console.log('Incrementos de atributos a enviar:', attributeIncrements);
       console.log('Total de pontos usados:', pointsUsed);
       
-      const apiUrl = 'http://localhost:3000/api/users/attributes';
-      
-      const response = await fetch(apiUrl, {
+      const response = await fetch(API_ENDPOINTS.USERS.ATTRIBUTES, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -329,7 +327,7 @@ const ProfilePage = () => {
 
       console.log('Enviando skills para equipar:', selectedSkills);
       
-      const response = await fetch(`${API_URL}/users/skills`, {
+      const response = await fetch(API_ENDPOINTS.USERS.SKILLS, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1078,7 +1076,7 @@ const ContributionCalendar: React.FC<{
       }
       
       // Obter as metas diárias através da API
-      const response = await fetch(`${API_URL}/goals/daily`, {
+      const response = await fetch(API_ENDPOINTS.GOALS.DAILY, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -1189,7 +1187,7 @@ const ContributionCalendar: React.FC<{
         return;
       }
       
-      const response = await fetch(`${API_URL}/goals/generate`, {
+      const response = await fetch(API_ENDPOINTS.GOALS.GENERATE, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

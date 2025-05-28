@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { API_URL } from '../../lib/config';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -6,8 +7,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Buscar interesses da API backend na porta 3000
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/interests`);
+    // Buscar interesses da API backend
+    const response = await fetch(`${API_URL}/interests`);
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

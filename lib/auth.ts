@@ -1,5 +1,3 @@
-import { cookies } from 'next/headers';
-
 /**
  * Verifica se um token JWT é válido e retorna o ID do usuário
  */
@@ -38,13 +36,11 @@ export function getToken(req: any): string | null {
   }
   
   // Verificar cookies (para Next.js)
-  try {
-    const cookieStore = cookies();
-    const token = cookieStore.get('token')?.value;
-    return token || null;
-  } catch {
-    return null;
+  if (req.cookies) {
+    return req.cookies.token || null;
   }
+  
+  return null;
 }
 
 /**

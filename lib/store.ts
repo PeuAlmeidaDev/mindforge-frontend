@@ -21,7 +21,7 @@ interface UserState {
   } | null;
   setUser: (user: UserState['user']) => void;
   clearUser: () => void;
-  updateStats: (stats: Partial<UserState['user']['stats']>) => void;
+  updateStats: (stats: Partial<NonNullable<UserState['user']>['stats']>) => void;
   addExperience: (amount: number) => void;
 }
 

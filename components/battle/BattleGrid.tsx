@@ -3,41 +3,7 @@ import useHouseTheme from '../../hooks/useHouseTheme';
 import { motion } from 'framer-motion';
 import ParticipantCard from './ParticipantCard';
 import { FaCheck, FaCrosshairs } from 'react-icons/fa';
-
-// Tipos para os participantes da batalha
-interface BattleParticipant {
-  id: string;
-  participantType: string;
-  teamId: string;
-  position: number;
-  currentHealth: number;
-  maxHealth?: number;
-  currentPhysicalAttack: number;
-  currentSpecialAttack: number;
-  currentPhysicalDefense: number;
-  currentSpecialDefense: number;
-  currentSpeed: number;
-  userId?: string;
-  enemyId?: string;
-  user?: {
-    id: string;
-    username: string;
-    profileImageUrl?: string;
-    primaryElementalType: string;
-    level: number;
-  };
-  enemy?: {
-    id: string;
-    name: string;
-    imageUrl: string;
-    elementalType: string;
-    rarity: string;
-    isBoss: boolean;
-  };
-  statusEffects: any[];
-  buffs: any[];
-  debuffs: any[];
-}
+import { BattleParticipant } from '../../types/battleTypes';
 
 interface BattleGridProps {
   playerTeam: BattleParticipant[];

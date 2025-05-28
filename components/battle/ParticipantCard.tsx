@@ -4,56 +4,10 @@ import useHouseTheme from '../../hooks/useHouseTheme';
 import { motion } from 'framer-motion';
 import { FaShieldAlt, FaBolt, FaHeart, FaFire, FaTint, FaLeaf, FaStar } from 'react-icons/fa';
 import ElementalTypeIcon from '../ElementalTypeIcon';
-
-interface Participant {
-  id: string;
-  participantType: string;
-  teamId: string;
-  position: number;
-  currentHealth: number;
-  maxHealth?: number;
-  currentPhysicalAttack: number;
-  currentSpecialAttack: number;
-  currentPhysicalDefense: number;
-  currentSpecialDefense: number;
-  currentSpeed: number;
-  user?: {
-    id: string;
-    username: string;
-    profileImageUrl?: string;
-    primaryElementalType: string;
-    secondaryElementalType?: string | null;
-    level: number;
-    attributes?: {
-      health: number;
-      physicalAttack: number;
-      specialAttack: number;
-      physicalDefense: number;
-      specialDefense: number;
-      speed: number;
-    };
-  } | null;
-  enemy?: {
-    id: string;
-    name: string;
-    imageUrl: string;
-    elementalType: string;
-    rarity: string;
-    isBoss: boolean;
-    health: number;
-    physicalAttack: number;
-    specialAttack: number;
-    physicalDefense: number;
-    specialDefense: number;
-    speed: number;
-  } | null;
-  statusEffects: any[];
-  buffs: any[];
-  debuffs: any[];
-}
+import { BattleParticipant } from '../../types/battleTypes';
 
 interface ParticipantCardProps {
-  participant: Participant;
+  participant: BattleParticipant;
   isPlayerTeam?: boolean;
   isSelectable?: boolean;
   isSelected?: boolean;

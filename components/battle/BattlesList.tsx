@@ -4,6 +4,7 @@ import useHouseTheme from '../../hooks/useHouseTheme';
 import useAuth from '../../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { FaArrowRight, FaHourglassHalf, FaCheckCircle, FaClock, FaSkull } from 'react-icons/fa';
+import { API_ENDPOINTS } from '../../lib/config';
 
 interface BattleParticipant {
   id: string;
@@ -49,7 +50,7 @@ const BattlesList: React.FC = () => {
   const fetchBattles = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/api/battles', {
+      const response = await fetch(API_ENDPOINTS.BATTLES.LIST, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

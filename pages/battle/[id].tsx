@@ -6,6 +6,7 @@ import useAuth from '../../hooks/useAuth';
 import BattleArena from '../../components/battle/BattleArena';
 import HeaderSection from '../../components/dashboard/HeaderSection';
 import { motion } from 'framer-motion';
+import { API_ENDPOINTS } from '../../lib/config';
 
 // Definição de tipos para a batalha
 interface BattleParticipant {
@@ -36,6 +37,12 @@ interface BattleParticipant {
     elementalType: string;
     rarity: string;
     isBoss: boolean;
+    health: number;
+    physicalAttack: number;
+    specialAttack: number;
+    physicalDefense: number;
+    specialDefense: number;
+    speed: number;
   };
   statusEffects: any[];
   buffs: any[];
@@ -80,8 +87,11 @@ const BattleDetailsPage: NextPage = () => {
       
       console.log('Carregando dados da batalha:', id);
       
+      // Garantir que o ID seja uma string
+      const battleId = Array.isArray(id) ? id[0] : id;
+      
       // Chamada à API para obter detalhes da batalha
-      fetch(`http://localhost:3000/api/battles/${id}`, {
+      fetch(API_ENDPOINTS.BATTLES.DETAIL(battleId), {
         headers: {
           'Authorization': `Bearer ${token}`
         }

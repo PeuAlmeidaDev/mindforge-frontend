@@ -1,11 +1,13 @@
 // Configurações para ambientes de desenvolvimento e produção
 const DEV_API_URL = 'http://localhost:3000/api';
-const PROD_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mindforge-api.vercel.app/api';
+const PROD_API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api`;
+
+console.log('Ambiente:', process.env.NODE_ENV);
 
 // Definir a URL base da API com base no ambiente
-export const API_URL = process.env.NODE_ENV === 'production' 
-  ? PROD_API_URL 
-  : DEV_API_URL;
+export const API_URL = process.env.NODE_ENV === 'production' ? PROD_API_URL : DEV_API_URL;
+
+console.log('API URL Final:', API_URL);
 
 // Endpoints específicos da API
 export const API_ENDPOINTS = {
@@ -13,11 +15,12 @@ export const API_ENDPOINTS = {
     LOGIN: `${API_URL}/auth/login`,
     REGISTER: `${API_URL}/auth/register`,
     PROFILE: `${API_URL}/auth/profile`,
+    REFRESH: `${API_URL}/auth/refresh`,
   },
   GOALS: {
     DAILY: `${API_URL}/goals/daily`,
-    COMPLETE: (goalId: string | number) => `${API_URL}/goals/complete/${goalId}`,
     GENERATE: `${API_URL}/goals/generate`,
+    COMPLETE: (id: string | number) => `${API_URL}/goals/complete/${id}`,
   },
   HOUSES: {
     INFO: (houseId: string) => `${API_URL}/houses/${houseId}`,
@@ -29,15 +32,19 @@ export const API_ENDPOINTS = {
   },
   USERS: {
     STATS: (userId: string) => `${API_URL}/users/${userId}/stats`,
+    ATTRIBUTES: `${API_URL}/users/attributes`,
+    SKILLS: `${API_URL}/users/skills`,
+    PROFILE: `${API_URL}/users/profile`,
   },
   BATTLES: {
     LIST: `${API_URL}/battles`,
-    DETAIL: (battleId: string) => `${API_URL}/battles/${battleId}`,
-    CREATE_RANDOM: `${API_URL}/battles/random`,
-    PROCESS_TURN: (battleId: string) => `${API_URL}/battles/${battleId}/turn`,
-    REWARDS: (battleId: string) => `${API_URL}/battles/${battleId}/rewards`,
+    DETAIL: (id: string | number) => `${API_URL}/battles/${id}`,
+    CREATE: `${API_URL}/battles`,
+    RANDOM: `${API_URL}/battles/random`,
+    TURN: (id: string | number) => `${API_URL}/battles/${id}/turn`,
+    REWARDS: (id: string | number) => `${API_URL}/battles/${id}/rewards`,
   }
-};
+} as const;
 
 // Tipos elementais padronizados (compartilhados entre todos os componentes)
 export const ELEMENTAL_TYPES = {

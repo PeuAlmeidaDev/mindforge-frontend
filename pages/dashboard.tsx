@@ -7,7 +7,7 @@ import useHouseTheme from '../hooks/useHouseTheme';
 import useHouseReveal from '../hooks/useHouseReveal';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
 import HouseRevealAnimation from '../components/HouseRevealAnimation';
-import { API_ENDPOINTS } from '../lib/config';
+import { fetchDailyGoals, generateDailyGoals, completeGoal } from '../lib/goalService';
 
 // Componentes extraídos
 import LoadingScreen from '../components/dashboard/LoadingScreen';
@@ -36,7 +36,7 @@ const MOCK_ACTIVITIES: Activity[] = [
 
 export default function Dashboard() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading, logout, refreshUserData } = useAuth();
+  const { user, isAuthenticated, isLoading, refreshUserData } = useAuth();
   const { refreshUserData: refreshUserProfile } = useUser();
   const { theme } = useHouseTheme();
   const { showReveal, completeReveal, isLoading: revealLoading } = useHouseReveal();
@@ -50,191 +50,83 @@ export default function Dashboard() {
   const hasHouse = Boolean(user && user.house && user.house.name);
   const houseName = user?.house?.name || 'Sem Casa';
 
-  // Função para atualizar os dados do usuário, mas não atualizar as metas automaticamente
+  // Função para atualizar os dados do usuário
   const updateUserData = async () => {
     console.log('Atualizando dados do usuário no Dashboard');
     if (refreshUserData) await refreshUserData();
     if (refreshUserProfile) await refreshUserProfile();
   };
 
-  // Separar o carregamento de dados para que as metas não atualizem constantemente
+  // Efeito para autenticação e visibilidade do dashboard
   useEffect(() => {
-    // Redirecionar para login se não estiver autenticado
     if (!isAuthenticated && !isLoading) {
       router.push('/login');
     }
     
-    // Atualizar apenas os dados do usuário quando o dashboard é carregado
     if (isAuthenticated && user) {
       updateUserData();
     }
     
-    // Atualizar visibilidade do dashboard quando o estado de showReveal mudar
     setDashboardVisible(!showReveal);
   }, [isAuthenticated, isLoading, router, user, showReveal]);
   
-  // Efeito separado para carregar as metas apenas uma vez quando o dashboard é montado
+  // Efeito para carregar metas
   useEffect(() => {
     if (isAuthenticated && user) {
       console.log('Carregando metas uma única vez');
       fetchUserGoals();
     }
-  }, [isAuthenticated, user]); // Remove router e showReveal para evitar atualizações desnecessárias
+  }, [isAuthenticated, user]);
 
-  // Função para extrair o nome do interesse de forma segura, lidando com diferentes estruturas
+  // Função para extrair o nome do interesse
   const getInterestName = (goal: any): string => {
     if (!goal) return 'Geral';
     
-    // Caso 1: Objeto interest está diretamente em goal
-    if (goal.interest && goal.interest.name) {
-      return goal.interest.name;
-    }
-    
-    // Caso 2: Um array de interests dentro de goal
-    if (goal.interests && Array.isArray(goal.interests) && goal.interests.length > 0) {
-      // Caso 2.1: Interests são objetos completos
-      if (typeof goal.interests[0] === 'object' && goal.interests[0].name) {
-        return goal.interests[0].name;
-      }
-      
-      // Caso 2.2: Interests são apenas strings
-      if (typeof goal.interests[0] === 'string') {
-        return goal.interests[0];
-      }
-    }
-    
-    // Caso 3: Interest está em goalInterests
-    if (goal.goalInterests && Array.isArray(goal.goalInterests) && goal.goalInterests.length > 0) {
-      const interest = goal.goalInterests[0].interest;
-      if (interest && interest.name) {
-        return interest.name;
-      }
-    }
-    
-    // Caso 4: Interest está em interestId
-    if (goal.interestId) {
-      return typeof goal.interestId === 'object' && goal.interestId.name
-        ? goal.interestId.name
-        : 'Interesse #' + goal.interestId;
-    }
+    if (goal.interest?.name) return goal.interest.name;
+    if (goal.interests?.[0]?.name) return goal.interests[0].name;
+    if (typeof goal.interests?.[0] === 'string') return goal.interests[0];
+    if (goal.goalInterests?.[0]?.interest?.name) return goal.goalInterests[0].interest.name;
+    if (goal.interestId?.name) return goal.interestId.name;
+    if (goal.interestId) return `Interesse #${goal.interestId}`;
     
     return 'Geral';
   };
 
-  // Função para extrair o nome da meta de forma segura
+  // Função para extrair o título da meta
   const getGoalTitle = (goal: any, item: any): string => {
-    // Verificar vários formatos possíveis para o título
-    
-    // Verificar na propriedade name do goal
-    if (goal && goal.name) {
-      return goal.name;
-    }
-    
-    // Verificar na propriedade title do goal
-    if (goal && goal.title) {
-      return goal.title;
-    }
-    
-    // Verificar na propriedade description do goal
-    if (goal && goal.description) {
-      return goal.description;
-    }
-    
-    // Verificar diretamente no item
-    if (item.name) {
-      return item.name;
-    }
-    
-    // Verificar diretamente no item
-    if (item.title) {
-      return item.title;
-    }
-    
-    // Fallback
-    return 'Meta sem título';
+    return goal?.name || goal?.title || goal?.description || item.name || item.title || 'Meta sem título';
   };
 
-  // Função para buscar metas do usuário da API
+  // Função para buscar metas do usuário
   const fetchUserGoals = async () => {
     setLoadingGoals(true);
     
     try {
-      const token = localStorage.getItem('token');
-      console.log('Buscando metas do usuário...');
+      const response = await fetchDailyGoals();
       
-      const response = await fetch(API_ENDPOINTS.GOALS.DAILY, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      
-      console.log('Status da resposta:', response.status);
-      
-      if (response.ok) {
-        const responseData = await response.json();
-        console.log('Resposta completa:', responseData);
+      if (response.success && response.data) {
+        const formattedGoals = response.data
+          .map((item, index) => {
+            if (!item.goal) {
+              console.error('Meta sem informações de goal:', item);
+              return null;
+            }
+            
+            return {
+              id: item.id,
+              internalId: index,
+              title: getGoalTitle(item.goal, item),
+              completed: Boolean(item.completed),
+              type: getInterestName(item.goal),
+              optional: Boolean(item.isOptional),
+              apiId: item.id
+            };
+          })
+          .filter(Boolean);
         
-        if (!responseData.data || !Array.isArray(responseData.data)) {
-          console.error('Formato de resposta inválido:', responseData);
-          setGoals([]);
-          return;
-        }
-        
-        if (responseData.data.length === 0) {
-          console.log('Nenhuma meta encontrada para o usuário');
-          setGoals([]);
-          return;
-        }
-        
-        console.log('Metas encontradas:', responseData.data.length);
-        
-        // Para debug - verificar a estrutura do primeiro item
-        if (responseData.data.length > 0) {
-          console.log('Estrutura da primeira meta:', JSON.stringify(responseData.data[0], null, 2));
-          // Verificar explicitamente cada campo possível para o título
-          const firstItem = responseData.data[0];
-          const firstGoal = firstItem.goal;
-          console.log('Possíveis campos para título:');
-          console.log('- goal.name:', firstGoal?.name);
-          console.log('- goal.title:', firstGoal?.title);
-          console.log('- goal.description:', firstGoal?.description);
-          console.log('- item.name:', firstItem?.name);
-          console.log('- item.title:', firstItem?.title);
-        }
-        
-        // Mapeamento mais resistente a diferentes estruturas de dados
-        const formattedGoals = responseData.data.map((item: any, index: number) => {
-          // Verificar se goal existe
-          if (!item.goal) {
-            console.error('Meta sem informações de goal:', item);
-            return null;
-          }
-          
-          return {
-            id: item.id,
-            internalId: index,
-            title: getGoalTitle(item.goal, item),
-            completed: Boolean(item.completed),
-            type: getInterestName(item.goal),
-            optional: Boolean(item.isOptional),
-            apiId: item.id
-          };
-        }).filter(Boolean); // Remover itens nulos
-        
-        console.log('Metas formatadas:', formattedGoals);
-        
-        // Atualizar o estado apenas se o componente ainda estiver montado
         setGoals(formattedGoals);
       } else {
-        console.error('Erro ao buscar metas:', response.statusText);
-        // Tentar obter informações de erro
-        try {
-          const errorData = await response.json();
-          console.error('Detalhes do erro:', errorData);
-        } catch (e) {
-          console.error('Não foi possível obter detalhes do erro');
-        }
-        
+        console.error('Erro ao buscar metas:', response.message);
         setGoals([]);
       }
     } catch (error) {
@@ -247,16 +139,13 @@ export default function Dashboard() {
 
   // Função para tentar buscar metas várias vezes
   const pollingFetchGoals = async (attempts = 3, delay = 1000): Promise<boolean> => {
-    // Primeira tentativa
     await fetchUserGoals();
     
-    // Verificar se metas foram encontradas na primeira tentativa
-    if (goals && goals.length > 0) {
+    if (goals.length > 0) {
       console.log('Metas encontradas na primeira tentativa');
       return true;
     }
     
-    // Se não houver metas na primeira tentativa, tentar novamente
     return new Promise(resolve => {
       let currentAttempt = 1;
       
@@ -270,49 +159,17 @@ export default function Dashboard() {
         currentAttempt++;
         console.log(`Tentativa ${currentAttempt} de ${attempts} para buscar metas...`);
         
-        try {
-          await fetchUserGoals();
-          // Verificar diretamente no estado mais atual
-          const updatedGoals = await fetch(API_ENDPOINTS.GOALS.DAILY, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`
-            }
-          }).then(res => res.json());
-          
-          if (updatedGoals.data && updatedGoals.data.length > 0) {
-            console.log(`Metas encontradas na tentativa ${currentAttempt}`);
-            
-            // Atualizar o estado diretamente
-            const formattedGoals = updatedGoals.data.map((item: any, index: number) => {
-              if (!item.goal) {
-                return null;
-              }
-              
-              return {
-                id: item.id,
-                internalId: index,
-                title: getGoalTitle(item.goal, item),
-                completed: Boolean(item.completed),
-                type: getInterestName(item.goal),
-                optional: Boolean(item.isOptional),
-                apiId: item.id
-              };
-            }).filter(Boolean);
-            
-            setGoals(formattedGoals);
-            resolve(true);
-            return;
-          }
-          
-          // Tentar novamente após o delay
-          setTimeout(tryAgain, delay);
-        } catch (error) {
-          console.error('Erro ao buscar metas durante polling:', error);
-          setTimeout(tryAgain, delay);
+        await fetchUserGoals();
+        
+        if (goals.length > 0) {
+          console.log(`Metas encontradas na tentativa ${currentAttempt}`);
+          resolve(true);
+          return;
         }
+        
+        setTimeout(tryAgain, delay);
       };
       
-      // Iniciar o processo de retry
       setTimeout(tryAgain, delay);
     });
   };
@@ -320,39 +177,14 @@ export default function Dashboard() {
   // Função para gerar metas diárias
   const handleGenerateGoals = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Token não encontrado');
-      }
-      
-      console.log('Iniciando geração de metas diárias...');
       setLoadingGoals(true);
       
-      const response = await fetch(API_ENDPOINTS.GOALS.GENERATE, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await generateDailyGoals();
       
-      console.log('Status da resposta da geração:', response.status);
-      
-      const data = await response.json();
-      console.log('Resposta da geração:', data);
-      
-      if (response.ok) {
-        console.log('Metas geradas com sucesso!', data.message);
-        
-        // Verificar se há metas nos dados retornados
-        if (data.data && Array.isArray(data.data) && data.data.length > 0) {
-          console.log(`${data.data.length} metas foram geradas`);
-          
-          // Formatar diretamente as metas recebidas
-          const formattedGoals = data.data.map((item: any, index: number) => {
-            if (!item.goal) {
-              return null;
-            }
+      if (response.success && response.data) {
+        const formattedGoals = response.data
+          .map((item, index) => {
+            if (!item.goal) return null;
             
             return {
               id: item.id,
@@ -363,27 +195,21 @@ export default function Dashboard() {
               optional: Boolean(item.isOptional),
               apiId: item.id
             };
-          }).filter(Boolean);
-          
-          // Atualizar o estado diretamente
-          setGoals(formattedGoals);
-          setLoadingGoals(false);
-          return;
-        }
+          })
+          .filter(Boolean);
         
-        // Se não tiver dados na resposta, tenta buscar via polling
+        setGoals(formattedGoals);
+      } else {
+        console.error('Erro ao gerar metas:', response.message);
         const success = await pollingFetchGoals(5, 1000);
         
         if (!success) {
-          console.warn('Não foi possível carregar as metas após várias tentativas. O usuário precisará atualizar a página.');
+          console.warn('Não foi possível carregar as metas após várias tentativas');
         }
-      } else {
-        console.error('Erro ao gerar metas:', data.message || 'Erro desconhecido');
-        throw new Error(data.message || 'Erro ao gerar metas diárias');
       }
     } catch (error) {
       console.error('Erro ao gerar metas:', error);
-      throw error; // Repassar o erro para o componente tratar
+      throw error;
     } finally {
       setLoadingGoals(false);
     }
@@ -395,24 +221,15 @@ export default function Dashboard() {
     if (!goalToUpdate) return;
     
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(API_ENDPOINTS.GOALS.COMPLETE(goalToUpdate.apiId), {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await completeGoal(goalToUpdate.apiId);
       
-      if (response.ok) {
-        // Atualizar apenas o estado local, sem fazer nova requisição
+      if (response.success) {
         setGoals(prevGoals => 
           prevGoals.map(goal => 
             goal.id === goalId ? { ...goal, completed: true } : goal
           )
         );
         
-        // Atualizar o perfil do usuário para refletir mudanças na experiência, etc.
-        // mas sem buscar as metas novamente
         updateUserData();
       }
     } catch (error) {
@@ -437,65 +254,50 @@ export default function Dashboard() {
   return (
     <>
       <Head>
-        <title>{hasHouse ? `${houseName} | Mindforge` : 'Mindforge'}</title>
-        <meta name="description" content="Gerencie sua jornada no Mindforge" />
+        <title>Dashboard | Mindforge</title>
+        <meta name="description" content="Seu painel de controle no Mindforge" />
       </Head>
 
-      {/* Animação de revelação da casa */}
-      {showReveal && (
+      {showReveal ? (
         <HouseRevealAnimation onComplete={handleRevealComplete} />
-      )}
-
-      {/* Dashboard principal */}
-      {dashboardVisible && (
+      ) : (
         <DashboardLayout theme={theme}>
-          {/* Header e Banner + Barra de Menu */}
-          <HeaderSection 
-            theme={theme} 
-            user={user} 
-            houseName={houseName} 
-            hasHouse={hasHouse} 
+          <HeaderSection
+            theme={theme}
+            user={user}
+            houseName={houseName}
+            hasHouse={hasHouse}
             houseId={houseId}
           />
           
-          {/* Conteúdo principal */}
-          <main className="px-4 py-6 max-w-5xl mx-auto relative z-10">
-            {/* Status da Casa */}
-            {hasHouse && (
-              <HouseStatusCard 
-                theme={theme} 
-                houseName={houseName} 
-                router={router} 
-                houseId={houseId}
-              />
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6 mb-6">
+            <HouseStatusCard
+              theme={theme}
+              houseName={houseName}
+              houseId={houseId}
+              router={router}
+            />
             
-            {/* Grade principal de conteúdo */}
-            <div className="space-y-6">
-              {/* Metas Diárias */}
-              <DailyGoalsCard 
-                theme={theme} 
-                goals={goals} 
-                loadingGoals={loadingGoals} 
-                onGoalComplete={handleGoalComplete}
-                onGenerateGoals={handleGenerateGoals}
-              />
-              
-              {/* Estatísticas do Usuário */}
-              <UserStatsCard 
-                theme={theme} 
-                user={user} 
-                hasHouse={hasHouse} 
-              />
-              
-              {/* Feed de Atividades */}
-              <ActivityFeedCard 
-                theme={theme} 
-                activities={activities} 
-                hasHouse={hasHouse} 
-              />
-            </div>
-          </main>
+            <DailyGoalsCard
+              theme={theme}
+              goals={goals}
+              loadingGoals={loadingGoals}
+              onGoalComplete={handleGoalComplete}
+              onGenerateGoals={handleGenerateGoals}
+            />
+            
+            <UserStatsCard
+              theme={theme}
+              user={user}
+              hasHouse={hasHouse}
+            />
+          </div>
+          
+          <ActivityFeedCard
+            theme={theme}
+            activities={activities}
+            hasHouse={hasHouse}
+          />
         </DashboardLayout>
       )}
     </>
