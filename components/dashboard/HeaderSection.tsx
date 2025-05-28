@@ -4,6 +4,8 @@ import DashboardHeader from './DashboardHeader';
 import { useRouter } from 'next/router';
 import useAuth from '../../hooks/useAuth';
 import useUser from '../../hooks/useUser';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaBars, FaTimes } from 'react-icons/fa';
 
 interface HeaderSectionProps {
   theme: any;
@@ -21,16 +23,15 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
   houseId
 }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
   const { logout, refreshUserData } = useAuth();
   const { refreshUserData: userRefresh } = useUser();
   
-  // Atualizações apenas quando o HeaderSection é montado pela primeira vez
-  // e não a cada mudança de rota
+  // Fechar o menu mobile quando mudar de rota
   useEffect(() => {
-    // Eliminar esta atualização automática, pois está causando atualizações excessivas
-    // As atualizações serão feitas em pontos específicos da aplicação
-  }, []);
+    setIsMobileMenuOpen(false);
+  }, [router.pathname]);
   
   // Atualizar a aba ativa com base na rota atual
   useEffect(() => {
@@ -60,6 +61,35 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
     
     return { r, g, b };
   };
+  
+  const menuItems = [
+    {
+      label: "Dashboard",
+      route: "/dashboard",
+      id: "dashboard"
+    },
+    {
+      label: "Batalha",
+      route: "/battle",
+      id: "battle"
+    },
+    {
+      label: "Casa",
+      route: "/house",
+      id: "house"
+    },
+    {
+      label: "Ranking",
+      route: "/ranking",
+      id: "ranking",
+      disabled: true
+    },
+    {
+      label: "Perfil",
+      route: "/profile",
+      id: "profile"
+    }
+  ];
   
   return (
     <div className="relative">
@@ -92,36 +122,17 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-14">
-            <div className="flex space-x-1">
-              <MenuButton 
-                label="Dashboard" 
-                isActive={activeTab === 'dashboard'} 
-                onClick={() => router.push('/dashboard')}
-                theme={theme}
-              />
-              
-              <MenuButton 
-                label="Batalha" 
-                isActive={activeTab === 'battle'} 
-                onClick={() => router.push('/battle')}
-                theme={theme}
-              />
-              
-              <MenuButton 
-                label="Casa" 
-                isActive={activeTab === 'house'} 
-                onClick={() => router.push('/house')}
-                theme={theme}
-              />
-              
-              <div className="relative group">
+            {/* Menu Desktop */}
+            <div className="hidden md:flex space-x-1">
+              {menuItems.map((item) => (
                 <MenuButton 
-                  label="Ranking" 
-                  isActive={activeTab === 'ranking'} 
-                  onClick={() => {}}
+                  key={item.id}
+                  label={item.label} 
+                  isActive={activeTab === item.id} 
+                  onClick={() => !item.disabled && router.push(item.route)}
                   theme={theme}
-                  disabled={true}
-                  icon={
+                  disabled={item.disabled}
+                  icon={item.disabled && (
                     <svg 
                       xmlns="http://www.w3.org/2000/svg" 
                       className="h-3 w-3 ml-1" 
@@ -136,26 +147,22 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 10-8 0v4h8z" 
                       />
                     </svg>
-                  }
+                  )}
                 />
-                {/* Tooltip */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
-                  <div className="text-center">
-                    Ranking estará disponível em breve!
-                  </div>
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
-                </div>
-              </div>
+              ))}
             </div>
-            
-            <div className="flex space-x-2">
-              <MenuButton 
-                label="Perfil" 
-                isActive={activeTab === 'profile'} 
-                onClick={() => router.push('/profile')}
-                theme={theme}
-              />
-              
+
+            {/* Botão Menu Mobile */}
+            <button
+              className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              style={{ color: theme.colors.text }}
+            >
+              {isMobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+            </button>
+
+            {/* Botões da direita */}
+            <div className="hidden md:flex space-x-2">
               <MenuButton 
                 label="Sair" 
                 isActive={false} 
@@ -170,6 +177,62 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
               />
             </div>
           </div>
+
+          {/* Menu Mobile */}
+          <AnimatePresence>
+            {isMobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="md:hidden overflow-hidden"
+                style={{ 
+                  backgroundColor: `rgba(${hexToRgb(theme.colors.backgroundDark).r}, ${hexToRgb(theme.colors.backgroundDark).g}, ${hexToRgb(theme.colors.backgroundDark).b}, 0.95)`,
+                }}
+              >
+                <div className="py-2 space-y-1">
+                  {menuItems.map((item) => (
+                    <MenuButton 
+                      key={item.id}
+                      label={item.label} 
+                      isActive={activeTab === item.id} 
+                      onClick={() => !item.disabled && router.push(item.route)}
+                      theme={theme}
+                      disabled={item.disabled}
+                      icon={item.disabled && (
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          className="h-3 w-3 ml-1" 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2} 
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 10-8 0v4h8z" 
+                          />
+                        </svg>
+                      )}
+                    />
+                  ))}
+                  <MenuButton 
+                    label="Sair" 
+                    isActive={false} 
+                    onClick={() => logout()}
+                    theme={{
+                      ...theme,
+                      colors: {
+                        ...theme.colors,
+                        primary: '#FF4D4D'
+                      }
+                    }}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

@@ -11,6 +11,7 @@ const AuthContext = createContext<AuthContextType>({
   register: async () => {},
   logout: () => {},
   error: null,
+  validationErrors: null,
   isNewUser: false,
   token: null,
   setUser: () => {},
@@ -25,6 +26,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string[]> | null>(null);
   const [isNewUser, setIsNewUser] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
@@ -62,6 +64,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
+    setValidationErrors(null);
     setIsNewUser(false);
     
     const response = await loginUser(email, password);
@@ -82,22 +85,38 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const register = async (userData: RegisterUserData) => {
     setIsLoading(true);
     setError(null);
+    setValidationErrors(null);
     
-    const response = await registerUser(userData);
-    
-    if (response.success && response.data) {
-      const authToken = response.data.token;
-      localStorage.setItem('token', authToken);
-      setToken(authToken);
-      setUser(response.data.user);
-      setIsNewUser(true);
-      router.push('/dashboard');
-    } else {
-      setError(response.message || 'Falha no registro. Tente novamente.');
-      throw new Error(response.message || 'Falha no registro');
+    try {
+      const response = await registerUser(userData);
+      
+      if (response.success && response.data) {
+        const authToken = response.data.token;
+        localStorage.setItem('token', authToken);
+        setToken(authToken);
+        setUser(response.data.user);
+        setIsNewUser(true);
+        router.push('/dashboard');
+      } else {
+        setError(response.message || 'Falha no registro. Tente novamente.');
+        
+        // Armazenar erros de validação detalhados, se disponíveis
+        if (response.errors) {
+          setValidationErrors(response.errors);
+        }
+        
+        throw new Error(response.message || 'Falha no registro');
+      }
+    } catch (error) {
+      // Garantir que qualquer erro não capturado seja propagado
+      if (error instanceof Error) {
+        throw error;
+      } else {
+        throw new Error('Erro desconhecido durante o registro');
+      }
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   const logout = () => {
@@ -143,6 +162,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         register,
         logout,
         error,
+        validationErrors,
         isNewUser,
         token,
         setUser,

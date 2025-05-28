@@ -42,6 +42,7 @@ export interface AuthContextType {
   register: (userData: RegisterUserData) => Promise<void>;
   logout: () => void;
   error: string | null;
+  validationErrors: Record<string, string[]> | null;
   isNewUser: boolean;
   token: string | null;
   setUser: (user: User) => void;

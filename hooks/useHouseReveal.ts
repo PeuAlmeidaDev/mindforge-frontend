@@ -5,24 +5,35 @@ export default function useHouseReveal() {
   const { user, isAuthenticated, isNewUser } = useAuth();
   const [showReveal, setShowReveal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [checkedSession, setCheckedSession] = useState(false);
 
   useEffect(() => {
+    // Se já verificamos nesta sessão, não exibe a animação novamente
+    if (checkedSession) {
+      setIsLoading(false);
+      return;
+    }
+
     // Só continua se o usuário estiver autenticado e tiver uma casa
     if (!isAuthenticated || !user || !user.house) {
       setIsLoading(false);
       return;
     }
 
+    // Verificar se já viu a animação antes usando localStorage
+    const userHasSeenReveal = localStorage.getItem(`house_reveal_${user.id}`);
+    
+    // Marcar esta sessão como verificada para evitar verificações repetidas
+    setCheckedSession(true);
+
     // Se for um usuário recém-registrado, sempre mostra a animação
-    if (isNewUser && user.house.id) {
+    if (isNewUser && user.house.id && !userHasSeenReveal) {
       setShowReveal(true);
       setIsLoading(false);
       return;
     }
 
-    // Se não for um usuário novo, verificar se já viu a animação antes
-    const userHasSeenReveal = localStorage.getItem(`house_reveal_${user.id}`);
-    
+    // Para usuários existentes, só mostra se nunca viram antes
     if (!userHasSeenReveal && user.house && user.house.id) {
       setShowReveal(true);
     } else {
@@ -30,7 +41,7 @@ export default function useHouseReveal() {
     }
     
     setIsLoading(false);
-  }, [user, isAuthenticated, isNewUser]);
+  }, [user, isAuthenticated, isNewUser, checkedSession]);
 
   const completeReveal = () => {
     if (user && user.id) {

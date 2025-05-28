@@ -270,34 +270,44 @@ export default function Dashboard() {
             houseId={houseId}
           />
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6 mb-6">
-            <HouseStatusCard
-              theme={theme}
-              houseName={houseName}
-              houseId={houseId}
-              router={router}
-            />
-            
-            <DailyGoalsCard
-              theme={theme}
-              goals={goals}
-              loadingGoals={loadingGoals}
-              onGoalComplete={handleGoalComplete}
-              onGenerateGoals={handleGenerateGoals}
-            />
-            
-            <UserStatsCard
-              theme={theme}
-              user={user}
-              hasHouse={hasHouse}
-            />
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+              <div className="lg:col-span-3">
+                <HouseStatusCard
+                  theme={theme}
+                  houseName={houseName}
+                  houseId={houseId}
+                  router={router}
+                />
+              </div>
+              
+              <div className="lg:col-span-2">
+                <DailyGoalsCard
+                  theme={theme}
+                  goals={goals}
+                  loadingGoals={loadingGoals}
+                  onGoalComplete={handleGoalComplete}
+                  onGenerateGoals={handleGenerateGoals}
+                />
+              </div>
+              
+              <div className="lg:col-span-1">
+                <UserStatsCard
+                  theme={theme}
+                  user={user}
+                  hasHouse={hasHouse}
+                />
+              </div>
+              
+              <div className="lg:col-span-3">
+                <ActivityFeedCard
+                  theme={theme}
+                  activities={activities}
+                  hasHouse={hasHouse}
+                />
+              </div>
+            </div>
           </div>
-          
-          <ActivityFeedCard
-            theme={theme}
-            activities={activities}
-            hasHouse={hasHouse}
-          />
         </DashboardLayout>
       )}
     </>

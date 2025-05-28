@@ -48,7 +48,7 @@ const itemVariants = {
 
 export default function Register() {
   const router = useRouter();
-  const { register, isLoading: authLoading, error: authError } = useAuth();
+  const { register, isLoading: authLoading, error: authError, validationErrors } = useAuth();
   const { interests, isLoading: interestsLoading, error: interestsError } = useInterests();
   const [formData, setFormData] = useState({
     username: '',
@@ -63,6 +63,13 @@ export default function Register() {
   const [apiError, setApiError] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
+
+  // Estado para rastrear os requisitos de senha atendidos
+  const [passwordRequirements, setPasswordRequirements] = useState({
+    minLength: false,
+    hasUppercase: false,
+    hasLowercase: false
+  });
 
   // Restaurar o estado do formulário do localStorage quando a página carrega
   useEffect(() => {
@@ -81,6 +88,39 @@ export default function Register() {
   useEffect(() => {
     localStorage.setItem('register_form_data', JSON.stringify(formData));
   }, [formData]);
+
+  // Efeito para atualizar erros de validação a partir da API
+  useEffect(() => {
+    if (validationErrors) {
+      const newErrors: Record<string, string> = {};
+      
+      // Converter arrays de erros para strings para campos específicos
+      Object.entries(validationErrors).forEach(([field, errorMessages]) => {
+        if (Array.isArray(errorMessages) && errorMessages.length > 0) {
+          newErrors[field] = errorMessages.join(', ');
+        }
+      });
+      
+      setErrors(prev => ({ ...prev, ...newErrors }));
+    }
+  }, [validationErrors]);
+
+  // Verificar requisitos de senha enquanto o usuário digita
+  useEffect(() => {
+    if (formData.password) {
+      setPasswordRequirements({
+        minLength: formData.password.length >= 8,
+        hasUppercase: /[A-Z]/.test(formData.password),
+        hasLowercase: /[a-z]/.test(formData.password)
+      });
+    } else {
+      setPasswordRequirements({
+        minLength: false,
+        hasUppercase: false,
+        hasLowercase: false
+      });
+    }
+  }, [formData.password]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -141,10 +181,35 @@ export default function Register() {
       }
     } 
     else if (currentStep === 2) {
+      // Validações mais detalhadas para a senha
+      const passwordErrors: string[] = [];
+      
       if (!formData.password) {
-        newErrors.password = 'Senha é obrigatória';
-      } else if (formData.password.length < 6) {
-        newErrors.password = 'A senha deve ter pelo menos 6 caracteres';
+        passwordErrors.push('Senha é obrigatória');
+      } else {
+        // Verificar comprimento
+        if (formData.password.length < 8) {
+          passwordErrors.push('A senha deve ter pelo menos 8 caracteres');
+        }
+        
+        // Verificar maiúsculas
+        if (!/[A-Z]/.test(formData.password)) {
+          passwordErrors.push('A senha deve ter pelo menos uma letra maiúscula');
+        }
+        
+        // Verificar minúsculas
+        if (!/[a-z]/.test(formData.password)) {
+          passwordErrors.push('A senha deve ter pelo menos uma letra minúscula');
+        }
+        
+        // Outras verificações podem ser adicionadas aqui se necessário
+        // Por exemplo: números, caracteres especiais, etc.
+      }
+      
+      if (passwordErrors.length > 0) {
+        // Armazenar os erros da senha como uma string separada por vírgulas
+        // mas garantir que a formatação na interface ocorra corretamente
+        newErrors.password = passwordErrors.join(', ');
       }
       
       if (formData.password !== formData.confirmPassword) {
@@ -193,6 +258,16 @@ export default function Register() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Verificar se todos os requisitos de senha foram atendidos
+  const allPasswordRequirementsMet = () => {
+    if (currentStep !== 2) return true;
+    
+    return passwordRequirements.minLength && 
+           passwordRequirements.hasUppercase && 
+           passwordRequirements.hasLowercase &&
+           formData.password === formData.confirmPassword;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -201,10 +276,14 @@ export default function Register() {
       return;
     }
     
-    if (!validateCurrentStep()) return;
+    if (!validateCurrentStep()) {
+      // Se a validação falhou, não deve continuar processando
+      return;
+    }
     
     setIsLoading(true);
     setApiError('');
+    setErrors({});
     
     try {
       const userData = {
@@ -220,11 +299,29 @@ export default function Register() {
       localStorage.removeItem('register_form_data');
       // Redirecionamento é feito dentro da função register
     } catch (error) {
+      console.error('Erro ao cadastrar:', error);
       setApiError(error instanceof Error ? error.message : 'Ocorreu um erro inesperado');
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Importante: desativar o loading em caso de erro
     }
   };
+
+  // Componente para requisitos de senha
+  const PasswordRequirement = ({ met, text }: { met: boolean; text: string }) => (
+    <div className="flex items-center mb-1">
+      <span className={`inline-flex items-center justify-center w-4 h-4 mr-2 rounded-full ${met ? 'bg-green-500' : 'bg-gray-500'}`}>
+        {met ? (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        )}
+      </span>
+      <span className={`text-xs ${met ? 'text-green-300' : 'text-gray-400'}`}>{text}</span>
+    </div>
+  );
 
   // Renderiza o conteúdo do formulário de acordo com o passo atual
   const renderStepContent = () => {
@@ -299,7 +396,28 @@ export default function Register() {
                 autoFocus
                 autoComplete="new-password"
               />
-              {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
+              
+              {/* Requisitos de senha */}
+              <div className="mt-2 p-3 bg-black/30 border border-green-900/30 rounded">
+                <p className="text-green-300 text-xs mb-2 font-medium">Requisitos de senha:</p>
+                <PasswordRequirement met={passwordRequirements.minLength} text="Pelo menos 8 caracteres" />
+                <PasswordRequirement met={passwordRequirements.hasUppercase} text="Pelo menos uma letra maiúscula" />
+                <PasswordRequirement met={passwordRequirements.hasLowercase} text="Pelo menos uma letra minúscula" />
+              </div>
+              
+              {errors.password && (
+                <div className="text-red-400 text-xs mt-1">
+                  {errors.password.includes(',') ? (
+                    <ul className="list-disc pl-4">
+                      {errors.password.split(', ').map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>{errors.password}</p>
+                  )}
+                </div>
+              )}
             </motion.div>
             
             <motion.div variants={itemVariants} className="mt-4">
@@ -509,7 +627,12 @@ export default function Register() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                {apiError || authError}
+                <div className="flex items-start">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 flex-shrink-0 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{apiError || authError}</span>
+                </div>
               </motion.div>
             )}
             
@@ -538,10 +661,10 @@ export default function Register() {
                 
                 <motion.button
                   type="submit"
-                  disabled={isLoading || authLoading}
-                  className="px-6 py-2 bg-green-700 hover:bg-green-600 text-white font-medium rounded transition duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 flex items-center"
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.98 }}
+                  disabled={isLoading || authLoading || (currentStep === 2 && !allPasswordRequirementsMet())}
+                  className="px-6 py-2 bg-green-700 hover:bg-green-600 text-white font-medium rounded transition duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+                  whileHover={{ scale: isLoading || authLoading || (currentStep === 2 && !allPasswordRequirementsMet()) ? 1 : 1.03 }}
+                  whileTap={{ scale: isLoading || authLoading || (currentStep === 2 && !allPasswordRequirementsMet()) ? 1 : 0.98 }}
                 >
                   {isLoading || authLoading 
                     ? (

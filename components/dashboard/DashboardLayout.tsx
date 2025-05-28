@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
 interface DashboardLayoutProps {
   theme: any;
@@ -6,14 +7,35 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ theme, children }) => (
-  <div 
-    className="min-h-screen relative overflow-hidden"
+  <motion.div 
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ duration: 0.5 }}
+    className="min-h-screen relative overflow-hidden pb-8"
     style={{ 
       background: `linear-gradient(180deg, ${theme.colors.backgroundDark} 0%, ${theme.colors.background} 100%)`,
       color: theme.colors.text 
     }}
   >
-    {children}
+    <div className="max-w-7xl mx-auto">
+      {children}
+    </div>
+    
+    {/* Elemento decorativo para telas grandes */}
+    <div className="hidden lg:block absolute top-20 right-0 w-64 h-64 rounded-full opacity-5" 
+      style={{ 
+        background: `radial-gradient(circle, ${theme.colors.primary} 0%, transparent 70%)`,
+        filter: 'blur(40px)'
+      }} 
+    />
+    
+    {/* Elemento decorativo para telas grandes */}
+    <div className="hidden lg:block absolute bottom-20 left-0 w-80 h-80 rounded-full opacity-5" 
+      style={{ 
+        background: `radial-gradient(circle, ${theme.colors.secondary} 0%, transparent 70%)`,
+        filter: 'blur(60px)'
+      }} 
+    />
     
     {/* Estilos globais para efeitos */}
     <style jsx global>{`
@@ -38,8 +60,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ theme, children }) =>
       [style*="border-left"]::before {
         background: linear-gradient(90deg, ${theme.colors.primary}50, transparent 20%);
       }
+      
+      /* Estilos responsivos */
+      @media (max-width: 640px) {
+        .container {
+          padding-left: 1rem;
+          padding-right: 1rem;
+        }
+      }
     `}</style>
-  </div>
+  </motion.div>
 );
 
 export default DashboardLayout; 

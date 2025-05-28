@@ -58,25 +58,41 @@ const HouseBanner = ({ houseId, size }: HouseBannerProps) => {
   // Configurar tamanhos baseados no prop size e na largura da tela
   const getBannerSize = () => {
     const isLarge = size === 'large';
+    const isMedium = size === 'medium';
     
-    if (windowWidth < 640) {
+    if (windowWidth < 480) { // Telas muito pequenas
       return { 
-        width: isLarge ? 120 : 90,
-        height: isLarge ? 200 : 160,
-        poleHeight: isLarge ? 220 : 180
+        width: isLarge ? 100 : isMedium ? 80 : 70,
+        height: isLarge ? 160 : isMedium ? 140 : 120,
+        poleHeight: isLarge ? 180 : isMedium ? 160 : 140
       };
     }
-    if (windowWidth < 768) {
+    if (windowWidth < 640) { // Telas pequenas
       return { 
-        width: isLarge ? 140 : 100, 
-        height: isLarge ? 220 : 180,
-        poleHeight: isLarge ? 240 : 200
+        width: isLarge ? 120 : isMedium ? 100 : 80,
+        height: isLarge ? 180 : isMedium ? 160 : 140,
+        poleHeight: isLarge ? 200 : isMedium ? 180 : 160
       };
     }
+    if (windowWidth < 768) { // Tablets
+      return { 
+        width: isLarge ? 140 : isMedium ? 120 : 100, 
+        height: isLarge ? 220 : isMedium ? 180 : 160,
+        poleHeight: isLarge ? 240 : isMedium ? 200 : 180
+      };
+    }
+    if (windowWidth < 1024) { // Telas médias
+      return { 
+        width: isLarge ? 150 : isMedium ? 130 : 110, 
+        height: isLarge ? 230 : isMedium ? 190 : 170,
+        poleHeight: isLarge ? 250 : isMedium ? 210 : 190
+      };
+    }
+    // Telas grandes
     return { 
-      width: isLarge ? 160 : 120, 
-      height: isLarge ? 240 : 200,
-      poleHeight: isLarge ? 260 : 220
+      width: isLarge ? 160 : isMedium ? 140 : 120, 
+      height: isLarge ? 240 : isMedium ? 200 : 180,
+      poleHeight: isLarge ? 260 : isMedium ? 220 : 200
     };
   };
   
@@ -91,12 +107,15 @@ const HouseBanner = ({ houseId, size }: HouseBannerProps) => {
   };
   
   return (
-    <div 
+    <motion.div 
       className="banner-container relative"
       style={{ 
         height: `${height}px`,
         width: `${width}px`,
       }}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
     >
       {/* Bandeira sem mastro */}
       <div 
@@ -182,20 +201,20 @@ const HouseBanner = ({ houseId, size }: HouseBannerProps) => {
                   textShadow: `0 2px 4px rgba(0,0,0,0.5)`
                 }}
               >
-                <div className="text-5xl mb-2">{getHouseInitial()}</div>
+                <div className="text-4xl sm:text-5xl mb-2">{getHouseInitial()}</div>
                 
-                {/* Símbolos decorativos */}
-                <div className="flex space-x-4 mt-4">
+                {/* Símbolos decorativos - ajustados para responsividade */}
+                <div className="flex space-x-2 sm:space-x-4 mt-2 sm:mt-4">
                   <div 
-                    className="h-8 w-8 rounded-full"
+                    className="h-6 w-6 sm:h-8 sm:w-8 rounded-full"
                     style={{ backgroundColor: theme.colors.secondary }}
                   />
                   <div 
-                    className="h-8 w-8 transform rotate-45"
+                    className="h-6 w-6 sm:h-8 sm:w-8 transform rotate-45"
                     style={{ backgroundColor: theme.colors.tertiary }}
                   />
                   <div 
-                    className="h-8 w-8 rounded-lg"
+                    className="h-6 w-6 sm:h-8 sm:w-8 rounded-lg"
                     style={{ backgroundColor: theme.colors.accent }}
                   />
                 </div>
@@ -220,7 +239,7 @@ const HouseBanner = ({ houseId, size }: HouseBannerProps) => {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
